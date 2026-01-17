@@ -377,15 +377,16 @@
     </div>
 
     <script>
-        // Configuration - SAME AS MAIN CONFIG
+        // Configuration
         const SUPABASE_URL = 'https://eflhgxogxcxwitybbrdg.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_PADXrkk93alYnylggyRJpA_xgVMybF-';
-        const ADMIN_PASSWORD = 'ikea2024'; // Change this!
+        const ADMIN_PASSWORD = 'ikea2024';
 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // Initialize Supabase client
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // Login
-        function login() {
+        // Login function
+        window.login = function () {
             const password = document.getElementById('admin-password').value;
             if (password === ADMIN_PASSWORD) {
                 document.getElementById('login-screen').style.display = 'none';
@@ -395,28 +396,16 @@
             } else {
                 document.getElementById('login-error').style.display = 'block';
             }
-        }
+        };
 
-        // Check if already logged in
-        if (sessionStorage.getItem('admin_logged_in') === 'true') {
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('dashboard').classList.add('visible');
-            refreshData();
-        }
-
-        // Logout
-        function logout() {
+        // Logout function
+        window.logout = function () {
             sessionStorage.removeItem('admin_logged_in');
             location.reload();
-        }
-
-        // Enter key to login
-        document.getElementById('admin-password').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') login();
-        });
+        };
 
         // Refresh all data
-        async function refreshData() {
+        window.refreshData = async function () {
             await Promise.all([
                 loadStats(),
                 loadPlayers(),
@@ -424,12 +413,13 @@
             ]);
             document.getElementById('last-updated').textContent =
                 'Last updated: ' + new Date().toLocaleTimeString();
-        }
+        };
 
         // Load statistics
         async function loadStats() {
             try {
-                const { data: codes } = await supabase.from('access_codes').select('status');
+                const { data: codes } = await supabaseClient.from('access_codes').select('status');
+                if (!codes) return;
 
                 const total = codes.length;
                 const unused = codes.filter(c => c.status === 'unused').length;
@@ -450,8 +440,8 @@
         // Load players
         async function loadPlayers() {
             try {
-                const { data: codes } = await supabase.from('access_codes').select('*');
-                const { data: sessions } = await supabase.from('game_sessions').select('*');
+                const { data: codes } = await supabaseClient.from('access_codes').select('*');
+                const { data: sessions } = await supabaseClient.from('game_sessions').select('*');
 
                 const tbody = document.getElementById('players-table');
 
@@ -465,7 +455,7 @@
                     const cluesDone = session?.current_clue_index || 0;
                     const rewards = session?.rewards_earned?.length || 0;
                     const started = session?.started_at ? new Date(session.started_at).toLocaleString() : '-';
-                    const completed = session?.completed_at ? new Date(session.completed_at).toLocaleString() : '-';
+                    const completedAt = session?.completed_at ? new Date(session.completed_at).toLocaleString() : '-';
 
                     return `
                         <tr>
@@ -474,7 +464,7 @@
                             <td>${cluesDone} / 3</td>
                             <td>🎁 ${rewards}</td>
                             <td>${started}</td>
-                            <td>${completed}</td>
+                            <td>${completedAt}</td>
                         </tr>
                     `;
                 }).join('');
@@ -486,7 +476,7 @@
         // Load rewards
         async function loadRewards() {
             try {
-                const { data: sessions } = await supabase.from('game_sessions').select('access_code, rewards_earned');
+                const { data: sessions } = await supabaseClient.from('game_sessions').select('access_code, rewards_earned');
 
                 const tbody = document.getElementById('rewards-table');
 
@@ -520,8 +510,23 @@
             }
         }
 
-        // Auto-refresh every 30 seconds
-        setInterval(refreshData, 30000);
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            // Check if already logged in
+            if (sessionStorage.getItem('admin_logged_in') === 'true') {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('dashboard').classList.add('visible');
+                refreshData();
+            }
+
+            // Enter key to login
+            document.getElementById('admin-password').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') login();
+            });
+
+            // Auto-refresh every 30 seconds
+            setInterval(refreshData, 30000);
+        });
     </script>
 </body>
 
