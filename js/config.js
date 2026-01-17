@@ -14,8 +14,8 @@ const CONFIG = {
     TOTAL_CLUES_PER_SESSION: 3,
 
     // Milestone Rewards (at these clue counts)
-    // For 3 clues: give 1 reward at the end only
-    MILESTONES: [3],
+    // 1 reward per clue: clue 1 = reward, clue 2 = reward, clue 3 = reward
+    MILESTONES: [1, 2, 3],
 
     // Timer Warning Threshold (minutes)
     TIMER_WARNING_MINUTES: 5,

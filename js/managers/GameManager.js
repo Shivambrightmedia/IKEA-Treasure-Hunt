@@ -302,52 +302,27 @@ class GameManager {
 
             if (this.timerManager) this.timerManager.stop();
 
-            // Check if final reward already given (prevent duplicates)
-            const existingRewards = this.player.getRewards();
-            const hasFinalReward = existingRewards.some(r => r.id === 'reward_final');
-
-            if (!hasFinalReward) {
-                // Generate final reward
-                const finalReward = {
-                    id: 'reward_final',
-                    milestone: 'final',
-                    barcode: this.generateBarcode(),
-                    unlocked_at: new Date().toISOString(),
-                    redeemed: false,
-                    type: 'final'
-                };
-
-                // Save final reward to session
-                await this.sessionService.addReward(this.player.accessCode, finalReward);
-
-                // Notify reward unlock
-                if (this.onRewardUnlock) {
-                    this.onRewardUnlock(finalReward);
-                }
-
-                console.log('Final reward added:', finalReward.barcode);
-            } else {
-                console.log('Final reward already exists, skipping...');
-            }
+            // No separate final reward - the 3rd milestone IS the final reward
+            // All 3 rewards are already given via checkMilestoneReward()
 
             // Mark session and code as completed
             await this.sessionService.markCompleted(this.player.accessCode);
             await this.accessCodeService.markCompleted(this.player.accessCode);
 
-            // Refresh session for final rewards
+            // Refresh session for final rewards display
             const finalSession = await this.sessionService.getSession(this.player.accessCode);
             if (finalSession) {
                 this.player.loadFromSession(finalSession);
             }
 
-            // Show end screen after short delay for reward animation
+            // Show end screen after short delay
             setTimeout(() => {
                 if (this.onGameEnd) {
                     this.onGameEnd('completed', this.player.getDashboard(0));
                 }
-            }, 1500);
+            }, 1000);
 
-            console.log('Game completed successfully!');
+            console.log('Game completed successfully! Total rewards:', this.player.getRewards().length);
         } catch (error) {
             console.error('Game completion error:', error);
             // Still try to show end screen even if saving fails
