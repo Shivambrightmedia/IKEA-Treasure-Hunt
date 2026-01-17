@@ -255,8 +255,17 @@ class GameManager {
         const completedCount = this.player.getCompletedClues().length;
 
         if (CONFIG.MILESTONES.includes(completedCount)) {
+            // Check if this reward already exists (prevent duplicates)
+            const existingRewards = this.player.getRewards();
+            const rewardId = `reward_${completedCount}`;
+
+            if (existingRewards.some(r => r.id === rewardId)) {
+                console.log(`Reward ${rewardId} already exists, skipping...`);
+                return;
+            }
+
             const reward = {
-                id: `reward_${completedCount}`,
+                id: rewardId,
                 milestone: completedCount,
                 barcode: this.generateBarcode(),
                 unlocked_at: new Date().toISOString(),
@@ -269,6 +278,8 @@ class GameManager {
             if (this.onRewardUnlock) {
                 this.onRewardUnlock(reward);
             }
+
+            console.log(`Milestone reward ${completedCount} added:`, reward.barcode);
         }
     }
 
@@ -291,18 +302,33 @@ class GameManager {
 
             if (this.timerManager) this.timerManager.stop();
 
-            // Generate final reward
-            const finalReward = {
-                id: 'reward_final',
-                milestone: 'final',
-                barcode: this.generateBarcode(),
-                unlocked_at: new Date().toISOString(),
-                redeemed: false,
-                type: 'final'
-            };
+            // Check if final reward already given (prevent duplicates)
+            const existingRewards = this.player.getRewards();
+            const hasFinalReward = existingRewards.some(r => r.id === 'reward_final');
 
-            // Save final reward to session
-            await this.sessionService.addReward(this.player.accessCode, finalReward);
+            if (!hasFinalReward) {
+                // Generate final reward
+                const finalReward = {
+                    id: 'reward_final',
+                    milestone: 'final',
+                    barcode: this.generateBarcode(),
+                    unlocked_at: new Date().toISOString(),
+                    redeemed: false,
+                    type: 'final'
+                };
+
+                // Save final reward to session
+                await this.sessionService.addReward(this.player.accessCode, finalReward);
+
+                // Notify reward unlock
+                if (this.onRewardUnlock) {
+                    this.onRewardUnlock(finalReward);
+                }
+
+                console.log('Final reward added:', finalReward.barcode);
+            } else {
+                console.log('Final reward already exists, skipping...');
+            }
 
             // Mark session and code as completed
             await this.sessionService.markCompleted(this.player.accessCode);
@@ -310,11 +336,8 @@ class GameManager {
 
             // Refresh session for final rewards
             const finalSession = await this.sessionService.getSession(this.player.accessCode);
-            this.player.loadFromSession(finalSession);
-
-            // Notify reward unlock
-            if (this.onRewardUnlock) {
-                this.onRewardUnlock(finalReward);
+            if (finalSession) {
+                this.player.loadFromSession(finalSession);
             }
 
             // Show end screen after short delay for reward animation
