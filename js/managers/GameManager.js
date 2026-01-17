@@ -253,14 +253,23 @@ class GameManager {
      */
     async checkMilestoneReward() {
         const completedCount = this.player.getCompletedClues().length;
+        const rewardId = `reward_${completedCount}`;
+
+        console.log(`Checking milestone for ${completedCount} clues, rewardId: ${rewardId}`);
 
         if (CONFIG.MILESTONES.includes(completedCount)) {
-            // Check if this reward already exists (prevent duplicates)
-            const existingRewards = this.player.getRewards();
-            const rewardId = `reward_${completedCount}`;
+            // Query database DIRECTLY to check if reward already exists (most reliable)
+            let existingRewards = [];
+            try {
+                const currentSession = await this.sessionService.getSession(this.player.accessCode);
+                existingRewards = currentSession?.rewards_earned || [];
+            } catch (err) {
+                console.warn('Could not fetch session for reward check:', err.message);
+            }
 
+            // Check if this specific reward already exists
             if (existingRewards.some(r => r.id === rewardId)) {
-                console.log(`Reward ${rewardId} already exists, skipping...`);
+                console.log(`Reward ${rewardId} already exists in database, skipping...`);
                 return;
             }
 
@@ -275,11 +284,17 @@ class GameManager {
 
             await this.sessionService.addReward(this.player.accessCode, reward);
 
+            // Refresh player session with new reward
+            const updatedSession = await this.sessionService.getSession(this.player.accessCode);
+            if (updatedSession) {
+                this.player.loadFromSession(updatedSession);
+            }
+
             if (this.onRewardUnlock) {
                 this.onRewardUnlock(reward);
             }
 
-            console.log(`Milestone reward ${completedCount} added:`, reward.barcode);
+            console.log(`✅ Milestone reward ${completedCount} added:`, reward.barcode);
         }
     }
 
