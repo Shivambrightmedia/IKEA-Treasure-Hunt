@@ -100,10 +100,18 @@ class GameManager {
             this.player = new Player(accessCode);
 
             // Get existing session
-            const session = await this.sessionService.getSession(accessCode);
+            let session = null;
+            try {
+                session = await this.sessionService.getSession(accessCode);
+            } catch (err) {
+                console.warn('Session lookup failed, will start new game:', err.message);
+            }
 
+            // If no session found, start new game instead
             if (!session) {
-                throw new Error('Session not found');
+                console.log('No session found for code, starting new game...');
+                await this.startNewGame(accessCode);
+                return;
             }
 
             // Check if expired
@@ -128,7 +136,14 @@ class GameManager {
             console.log('Game resumed:', accessCode);
         } catch (error) {
             console.error('Resume game error:', error);
-            if (this.onError) this.onError('Failed to resume game. Please try again.');
+            // Try to start new game as fallback
+            try {
+                console.log('Attempting to start new game as fallback...');
+                await this.startNewGame(accessCode);
+            } catch (fallbackError) {
+                console.error('Fallback also failed:', fallbackError);
+                if (this.onError) this.onError('Failed to start game. Please try again.');
+            }
         }
     }
 
