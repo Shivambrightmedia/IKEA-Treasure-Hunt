@@ -272,8 +272,24 @@ class GameManager {
      */
     async handleGameCompletion() {
         try {
-            this.timerManager.stop();
+            console.log('🎉 All clues found! Completing game...');
 
+            if (this.timerManager) this.timerManager.stop();
+
+            // Generate final reward
+            const finalReward = {
+                id: 'reward_final',
+                milestone: 'final',
+                barcode: this.generateBarcode(),
+                unlocked_at: new Date().toISOString(),
+                redeemed: false,
+                type: 'final'
+            };
+
+            // Save final reward to session
+            await this.sessionService.addReward(this.player.accessCode, finalReward);
+
+            // Mark session and code as completed
             await this.sessionService.markCompleted(this.player.accessCode);
             await this.accessCodeService.markCompleted(this.player.accessCode);
 
@@ -281,13 +297,25 @@ class GameManager {
             const finalSession = await this.sessionService.getSession(this.player.accessCode);
             this.player.loadFromSession(finalSession);
 
+            // Notify reward unlock
+            if (this.onRewardUnlock) {
+                this.onRewardUnlock(finalReward);
+            }
+
+            // Show end screen after short delay for reward animation
+            setTimeout(() => {
+                if (this.onGameEnd) {
+                    this.onGameEnd('completed', this.player.getDashboard(0));
+                }
+            }, 1500);
+
+            console.log('Game completed successfully!');
+        } catch (error) {
+            console.error('Game completion error:', error);
+            // Still try to show end screen even if saving fails
             if (this.onGameEnd) {
                 this.onGameEnd('completed', this.player.getDashboard(0));
             }
-
-            console.log('Game completed!');
-        } catch (error) {
-            console.error('Game completion error:', error);
         }
     }
 
