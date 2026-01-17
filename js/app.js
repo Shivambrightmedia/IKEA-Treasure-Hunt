@@ -273,14 +273,19 @@ function updateRewardsList(rewards) {
 function showErrorMessage(message) {
     const statusEl = document.getElementById('ar-status');
     if (statusEl) {
-        statusEl.textContent = message;
+        const originalText = statusEl.textContent;
+        statusEl.textContent = '❌ ' + message;
         statusEl.classList.add('error');
         setTimeout(() => {
             statusEl.classList.remove('error');
-            statusEl.textContent = 'Enter your code';
+            // Only reset if still showing error message
+            if (statusEl.textContent.includes(message)) {
+                statusEl.textContent = 'Hunting...';
+            }
         }, 3000);
     }
-    alert(message);
+    // REMOVED: alert(message) - this was blocking the camera!
+    console.warn('Game Error:', message);
 }
 
 function togglePanelState() {
