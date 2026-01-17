@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <title>IKEA AR Treasure Hunt</title>
+
+    <!-- MindAR.js Dependencies -->
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.2.0/dist/aframe-extras.min.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Verdana', sans-serif;
+            /* IKEA-ish font */
+        }
+
+        /* Branding Colors */
+        :root {
+            --ikea-blue: #0051ba;
+            --ikea-yellow: #ffda1a;
+        }
+
+        /* AR Scene - Full screen background */
+        #ar-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Status indicator */
+        #ar-status {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        #ar-status.found {
+            background: var(--ikea-blue);
+            color: var(--ikea-yellow);
+            font-weight: bold;
+        }
+
+        /* Registration Overlay */
+        #registration-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--ikea-yellow);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease;
+        }
+
+        #registration-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .reg-container {
+            background: white;
+            padding: 40px;
+            border-radius: 4px;
+            /* Boxy IKEA style */
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            margin-bottom: 200px;
+        }
+
+        .reg-title {
+            color: var(--ikea-blue);
+            font-size: 1.8em;
+            margin-bottom: 30px;
+            font-weight: 700;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ccc;
+            border-radius: 0;
+            /* Square borders */
+            font-size: 1.1em;
+            outline: none;
+        }
+
+        .input-group input:focus {
+            border-color: var(--ikea-blue);
+        }
+
+        .start-btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 30px;
+            background: var(--ikea-blue);
+            color: var(--ikea-yellow);
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .start-btn:hover {
+            background: #003e8e;
+        }
+
+        /* Clue Panel (Bottom Sheet style) */
+        #clue-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 50%;
+            /* Covers bottom half */
+
+            width: 100%;
+            background: white;
+            padding: 20px;
+            /* border-top: 5px solid var(--ikea-yellow); */
+            /* Moved border to handle */
+            z-index: 1500;
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.2);
+            transform: translateY(120%);
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        #clue-panel.visible {
+            transform: translateY(0);
+        }
+
+        #clue-panel.visible.collapsed {
+            /* Transform such that we see the header and the text */
+            /* We will rely on MAX-HEIGHT logic or hiding elements to "shrink" it visually, 
+               but strictly speaking 'transform' is smoother. 
+               Let's try: Translate down, but less? 
+               OR: Just hide the hint and button, and let the height be auto?
+               Current height is fixed 50%. 
+            */
+            transform: translateY(calc(50% - 4%));
+            /* Rough estimate to leave header+text visible */
+        }
+
+        /* Better approach for dynamic text visibility: 
+           When collapsed, we want the panel to essentially be "shorter".
+           But we used fixed height 50%.
+           Let's Hide the HINT and OK button when collapsed.
+        */
+
+        #clue-panel.collapsed #clue-hint,
+        #clue-panel.collapsed #cp-ok {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+
+        /* Drag Handle / Toggle Area */
+        .panel-handle-bar {
+            width: 100%;
+            height: 30px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            border-top: 5px solid var(--ikea-yellow);
+            background: white;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .handle-pill {
+            width: 40px;
+            height: 5px;
+            background: #ccc;
+            border-radius: 10px;
+        }
+
+        .panel-controls {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            z-index: 10;
+        }
+
+        .toggle-btn {
+            background: transparent;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #666;
+            padding: 5px;
+        }
+
+        .ok-btn {
+            background: var(--ikea-blue);
+            color: var(--ikea-yellow);
+            border: none;
+            padding: 10px 25px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 1em;
+            cursor: pointer;
+            display: block;
+            margin: 20px auto 0;
+            width: 80%;
+            max-width: 200px;
+        }
+
+
+        .clue-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .clue-badge {
+            background: var(--ikea-blue);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .clue-text {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #333;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        .clue-hint {
+            color: #666;
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 1.4em;
+        }
+
+        /* Success Overlay */
+        #success-overlay {
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--ikea-yellow);
+            padding: 20px 40px;
+            border-radius: 50px;
+            text-align: center;
+            color: var(--ikea-blue);
+            font-weight: bold;
+            font-size: 1.5em;
+            z-index: 1800;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            white-space: nowrap;
+        }
+
+        #success-overlay.visible {
+            opacity: 1;
+            animation: popUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popUp {
+            0% {
+                transform: translate(-50%, -50%) scale(0.5);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        /* Reward Screen */
+        #reward-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            z-index: 2500;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+            text-align: center;
+        }
+
+        #reward-screen.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .reward-content {
+            padding: 40px;
+            max-width: 400px;
+        }
+
+        .reward-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        .coupon-box {
+            border: 2px dashed var(--ikea-blue);
+            background: #f9f9f9;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Registration Overlay -->
+    <div id="registration-overlay">
+        <div class="reg-container">
+            <h1 class="reg-title">IKEA Treasure Hunt</h1>
+            <p style="color:#666; margin-bottom:20px;">Explore the store, find clues, earn rewards!</p>
+
+            <div class="input-group">
+                <label for="accessCodeInput">Enter Your 6-Digit Access Code</label>
+                <input type="text" id="accessCodeInput" placeholder="123456" maxlength="6" pattern="\d{6}"
+                    inputmode="numeric" autocomplete="off"
+                    style="text-align: center; font-size: 1.5em; letter-spacing: 8px;">
+            </div>
+
+            <p style="color:#888; font-size:0.85em; margin-bottom:20px;">Don't have a code? Register at IKEA.com</p>
+
+            <button class="start-btn" id="startBtn">Start Hunting</button>
+        </div>
+    </div>
+
+    <!-- Timer Display -->
+    <div id="timer-display" style="position: fixed; top: 10px; right: 10px; z-index: 1000; background: var(--ikea-blue); 
+        color: white; padding: 10px 20px; border-radius: 8px; font-size: 1.2em; font-weight: bold; display: none;">
+        45:00
+    </div>
+
+    <!-- Status Indicator -->
+    <div id="ar-status">Enter your code</div>
+
+    <!-- Success Pop-up -->
+    <div id="success-overlay">✨ Clue Found! ✨</div>
+
+    <!-- Clue Panel -->
+    <div id="clue-panel">
+        <div class="panel-handle-bar" id="cp-toggle-bar">
+            <div class="handle-pill"></div>
+        </div>
+
+        <div class="panel-controls">
+            <button class="toggle-btn" id="cp-toggle-icon">▼</button>
+        </div>
+
+        <div style="margin-top: 25px;">
+            <div class="clue-header">
+                <span class="clue-badge" id="clue-number">Clue 1/3</span>
+                <span style="font-size:24px;">🔍</span>
+            </div>
+            <p class="clue-text" id="clue-text">Loading...</p>
+            <p class="clue-hint" id="clue-hint">...</p>
+
+            <button class="ok-btn" id="cp-ok">OK, Got it!</button>
+        </div>
+    </div>
+
+    <!-- Reward Screen -->
+    <div id="reward-screen">
+        <div class="reward-content">
+            <div class="reward-icon">🎉</div>
+            <h1 style="color:var(--ikea-blue);">Congratulations!</h1>
+            <p>You have found all the treasures.</p>
+            <p>Here is your reward:</p>
+
+            <div class="coupon-box">IKEA-HUNT-2024</div>
+
+            <p style="font-size:0.9em; color:#666;">Show this code at checkout for a surprise discount.</p>
+
+            <button class="start-btn" onclick="window.location.reload()">Exit</button>
+        </div>
+    </div>
+
+    <!-- AR Scene Container -->
+    <div id="ar-container">
+        <!-- Using original targets.mind -->
+        <a-scene mindar-image="imageTargetSrc: targets.mind; autoStart: false; uiScanning: yes; uiLoading: yes;"
+            vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false"
+            renderer="colorManagement: true; physicallyCorrectLights: true; alpha: true;" embedded>
+
+            <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+            <!-- 3 Markers for Pilot -->
+            <a-entity mindar-image-target="targetIndex: 0" marker-handler="markerIndex: 0"></a-entity>
+            <a-entity mindar-image-target="targetIndex: 1" marker-handler="markerIndex: 1"></a-entity>
+            <a-entity mindar-image-target="targetIndex: 2" marker-handler="markerIndex: 2"></a-entity>
+
+        </a-scene>
+    </div>
+
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Modular JS Files (OOP/SOLID) -->
+    <script src="js/config.js"></script>
+    <script src="js/services/DatabaseService.js"></script>
+    <script src="js/services/AccessCodeService.js"></script>
+    <script src="js/services/SessionService.js"></script>
+    <script src="js/models/Player.js"></script>
+    <script src="js/models/Clue.js"></script>
+    <script src="js/managers/TimerManager.js"></script>
+    <script src="js/managers/GameManager.js"></script>
+    <script src="js/app.js"></script>
+
+    <!-- All game logic moved to modular js/ files -->
+</body>
+
+</html>
