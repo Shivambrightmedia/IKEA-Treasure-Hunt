@@ -42,9 +42,13 @@ class DatabaseService {
             query = query.eq(key, value);
         }
 
-        const { data, error } = await query.maybeSingle();
+        // Use limit(1) instead of maybeSingle() to avoid errors with 0 or multiple rows
+        const { data, error } = await query.limit(1);
+
         if (error) throw new Error(`Select failed: ${error.message}`);
-        return data;
+
+        // Return first row or null
+        return data && data.length > 0 ? data[0] : null;
     }
 
     async update(table, conditions, updates) {

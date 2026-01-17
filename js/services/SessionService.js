@@ -63,8 +63,16 @@ class SessionService {
      * @param {number} nextIndex - Next clue index
      */
     async completeClue(accessCode, clueId, nextIndex) {
-        const session = await this.getSession(accessCode);
-        const completedClues = session.completed_clues || [];
+        console.log('Completing clue:', { accessCode, clueId, nextIndex });
+
+        let session = null;
+        try {
+            session = await this.getSession(accessCode);
+        } catch (err) {
+            console.warn('Could not get session for update:', err.message);
+        }
+
+        const completedClues = (session?.completed_clues) || [];
         completedClues.push(clueId);
 
         await this.updateProgress(accessCode, {
@@ -72,6 +80,8 @@ class SessionService {
             current_clue_index: nextIndex,
             last_activity: new Date().toISOString()
         });
+
+        console.log('Clue completed successfully');
     }
 
     /**
@@ -80,13 +90,23 @@ class SessionService {
      * @param {Object} reward - Reward object
      */
     async addReward(accessCode, reward) {
-        const session = await this.getSession(accessCode);
-        const rewards = session.rewards_earned || [];
+        console.log('Adding reward:', { accessCode, reward });
+
+        let session = null;
+        try {
+            session = await this.getSession(accessCode);
+        } catch (err) {
+            console.warn('Could not get session for reward:', err.message);
+        }
+
+        const rewards = (session?.rewards_earned) || [];
         rewards.push(reward);
 
         await this.updateProgress(accessCode, {
             rewards_earned: rewards
         });
+
+        console.log('Reward added successfully');
     }
 
     /**
