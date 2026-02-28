@@ -131,9 +131,27 @@ async function handleStartClick() {
     const result = await gameManager.validateCode(code);
 
     if (!result.valid) {
-        showErrorMessage(result.error);
-        statusEl.textContent = 'Validation failed';
-        setTimeout(() => { statusEl.textContent = 'Enter your code'; }, 2000);
+        // Show inline error after 1 second
+        setTimeout(() => {
+            const errorMsg = document.getElementById('codeErrorMsg');
+            const codeInput = document.getElementById('accessCodeInput');
+
+            if (errorMsg) {
+                errorMsg.textContent = '❌ Your code is incorrect';
+                errorMsg.classList.add('visible');
+            }
+            if (codeInput) {
+                codeInput.classList.add('input-error');
+            }
+
+            statusEl.textContent = 'Enter your code';
+
+            // Hide error after 3 seconds
+            setTimeout(() => {
+                if (errorMsg) errorMsg.classList.remove('visible');
+                if (codeInput) codeInput.classList.remove('input-error');
+            }, 3000);
+        }, 1000);
         return;
     }
 

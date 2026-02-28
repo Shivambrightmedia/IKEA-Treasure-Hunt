@@ -167,6 +167,29 @@
             background: #003e8e;
         }
 
+        /* Inline error message for wrong code */
+        .code-error-msg {
+            color: #dc3545;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-top: 10px;
+            opacity: 0;
+            transform: translateY(-5px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            display: none;
+        }
+
+        .code-error-msg.visible {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .input-group input.input-error {
+            border-color: #dc3545;
+            animation: shake 0.5s ease-in-out;
+        }
+
         /* Clue Panel (Bottom Sheet style) */
         #clue-panel {
             position: fixed;
@@ -398,6 +421,7 @@
                 <input type="text" id="accessCodeInput" placeholder="123456" maxlength="6" pattern="\d{6}"
                     inputmode="numeric" autocomplete="off"
                     style="text-align: center; font-size: 1.5em; letter-spacing: 8px;">
+                <p class="code-error-msg" id="codeErrorMsg">❌ Your code is incorrect</p>
             </div>
 
             <p style="color:#888; font-size:0.85em; margin-bottom:20px;">Don't have a code? Register at IKEA.com</p>
