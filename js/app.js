@@ -125,29 +125,35 @@ async function handleStartClick() {
         return;
     }
 
+    // MOBILE OPTIMIZATION: Trigger AR startup immediately on the click gesture
+    // Many mobile browsers block the camera if it's called after an async delay
+    initAR();
+
     statusEl.textContent = 'Validating code...';
 
-    // Validate code
-    const result = await gameManager.validateCode(code);
+    try {
+        // Validate code
+        const result = await gameManager.validateCode(code);
 
-    if (!result.valid) {
-        // Show inline error instantly
-        showInlineError('❌ Your code is incorrect');
-        return;
+        if (!result.valid) {
+            showInlineError('❌ Your code is incorrect');
+            statusEl.textContent = 'Enter your code';
+            return;
+        }
+
+        // Show message
+        statusEl.textContent = result.message;
+
+        // Start or resume game
+        if (result.isResume) {
+            await gameManager.resumeGame(code);
+        } else {
+            await gameManager.startNewGame(code);
+        }
+    } catch (error) {
+        console.error('Mobile Connection Error:', error);
+        showInlineError('⚠️ Network Error: Check your internet/VPN');
     }
-
-    // Show message
-    statusEl.textContent = result.message;
-
-    // Start or resume game
-    if (result.isResume) {
-        await gameManager.resumeGame(code);
-    } else {
-        await gameManager.startNewGame(code);
-    }
-
-    // Initialize AR
-    initAR();
 }
 
 function showGameScreen() {
