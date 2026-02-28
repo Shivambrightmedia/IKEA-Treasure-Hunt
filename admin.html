@@ -503,33 +503,29 @@
             }
         };
 
-        // Load statistics using COUNT (much faster)
+        // Load statistics using a SINGLE request (much more stable for slow networks)
         async function loadStats() {
             try {
-                // Fetch counts directly using Supabase head option
-                const getCount = async (status) => {
-                    let query = supabaseClient.from('access_codes').select('*', { count: 'exact', head: true });
-                    if (status) query = query.eq('status', status);
-                    const { count, error } = await query;
-                    if (error) throw error;
-                    return count || 0;
-                };
+                // Fetch just the status column from all rows in one go
+                const { data, error } = await supabaseClient.from('access_codes').select('status');
 
-                const [total, unused, active, completed, expired] = await Promise.all([
-                    getCount(),
-                    getCount('unused'),
-                    getCount('active'),
-                    getCount('completed'),
-                    getCount('expired')
-                ]);
+                if (error) throw error;
+                if (!data) return;
 
-                document.getElementById('stat-total').textContent = total;
-                document.getElementById('stat-unused').textContent = unused;
-                document.getElementById('stat-active').textContent = active;
-                document.getElementById('stat-completed').textContent = completed;
-                document.getElementById('stat-expired').textContent = expired;
+                const counts = data.reduce((acc, curr) => {
+                    acc[curr.status] = (acc[curr.status] || 0) + 1;
+                    acc.total++;
+                    return acc;
+                }, { total: 0, unused: 0, active: 0, completed: 0, expired: 0 });
+
+                document.getElementById('stat-total').textContent = counts.total;
+                document.getElementById('stat-unused').textContent = counts.unused;
+                document.getElementById('stat-active').textContent = counts.active;
+                document.getElementById('stat-completed').textContent = counts.completed;
+                document.getElementById('stat-expired').textContent = counts.expired;
             } catch (error) {
                 console.error('Error loading stats:', error);
+                document.querySelectorAll('.stat-card .number').forEach(el => el.textContent = '⚠️');
             }
         }
 
@@ -577,7 +573,14 @@
                 }).join('');
             } catch (error) {
                 console.error('Error loading players:', error);
-                tbody.innerHTML = `<tr><td colspan="6" class="loading" style="color: var(--danger)">⚠️ Error loading data. Please try again.</td></tr>`;
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="loading">
+                            <div style="color: var(--danger); margin-bottom: 10px;">⚠️ Network Connection Error</div>
+                            <div style="font-size: 12px; color: #888;">It looks like your network is blocking the connection to Supabase. <br>Please check your internet, disable VPN/Ad-blockers, and try again.</div>
+                        </td>
+                    </tr>
+                `;
             }
         }
 
