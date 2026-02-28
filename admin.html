@@ -304,6 +304,22 @@
             </div>
         </div>
 
+        <!-- Diagnostic Alert (Hidden by default) -->
+        <div id="diagnostic-panel"
+            style="display: none; background: rgba(220, 53, 69, 0.2); border: 1px solid #dc3545; border-radius: 12px; padding: 20px; margin-bottom: 30px;">
+            <h3 style="color: #ff8e8e; margin-bottom: 10px;">⚠️ Connection Issues Detected</h3>
+            <p style="font-size: 14px; margin-bottom: 15px;">Your browser is having trouble communicating with the
+                Supabase database. This is usually caused by network firewalls or VPNs.</p>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-refresh" onclick="location.reload(true)" style="background: #dc3545;">🔄 Force
+                    Hard Refresh</button>
+                <button class="btn btn-refresh" onclick="testConnection()" style="background: #555;">🔍 Run Connectivity
+                    Test</button>
+            </div>
+            <pre id="diagnostic-output"
+                style="margin-top: 15px; background: rgba(0,0,0,0.3); padding: 10px; font-size: 11px; color: #ddd; max-height: 100px; overflow-y: auto;"></pre>
+        </div>
+
         <!-- Stats Cards -->
         <div class="stats-grid">
             <div class="stat-card">
@@ -477,7 +493,7 @@
             }
         };
 
-        // Refresh all data with improved performance
+        // Refresh all data
         window.refreshData = async function () {
             const refreshBtn = document.querySelector('.btn-refresh');
             if (refreshBtn) {
@@ -486,15 +502,18 @@
             }
 
             try {
-                // Load stats sequentially to reduce simultaneous connections
+                // First test: Simple stats
                 await loadStats();
                 await loadPlayers();
                 await loadRewards();
 
                 document.getElementById('last-updated').textContent =
                     'Last updated: ' + new Date().toLocaleTimeString();
+                document.getElementById('diagnostic-panel').style.display = 'none';
             } catch (err) {
                 console.error('Refresh failed:', err);
+                document.getElementById('diagnostic-panel').style.display = 'block';
+                document.getElementById('diagnostic-output').textContent += `\n[${new Date().toLocaleTimeString()}] ${err.message}`;
             } finally {
                 if (refreshBtn) {
                     refreshBtn.disabled = false;
@@ -502,6 +521,27 @@
                 }
             }
         };
+
+        // Network check helper
+        window.testConnection = async function () {
+            const out = document.getElementById('diagnostic-output');
+            out.textContent = "Starting diagnostic test...\n";
+
+            try {
+                out.textContent += "1. Pinging Supabase API endpoint...";
+                const start = Date.now();
+                const response = await fetch(SUPABASE_URL + '/rest/v1/', {
+                    method: 'GET',
+                    headers: { 'apikey': SUPABASE_KEY }
+                });
+                out.textContent += ` SUCCESS (${Date.now() - start}ms)\n`;
+                out.textContent += `2. API Key Format check: ${SUPABASE_KEY.startsWith('sb_') ? 'Custom/Legacy' : 'Standard JWT'}\n`;
+                out.textContent += "3. Status: Database endpoint is reachable.";
+            } catch (e) {
+                out.textContent += ` FAILED!\nError: ${e.message}\n`;
+                out.textContent += "\nRECOMMENDATION:\n- Try a Mobile Hotspot (avoid corporate/office Wi-Fi)\n- Turn OFF VPNs\n- Check if Supabase project is paused in the dashboard";
+            }
+        }
 
         // Load statistics using a SINGLE request (much more stable for slow networks)
         async function loadStats() {
