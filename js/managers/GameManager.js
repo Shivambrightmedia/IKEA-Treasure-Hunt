@@ -59,6 +59,13 @@ class GameManager {
      */
     async startNewGame(accessCode) {
         try {
+            // Check if session ALREADY exists (edge case where code is UNUSED but session exists)
+            const existingSession = await this.sessionService.getSession(accessCode);
+            if (existingSession) {
+                console.log('Session already exists, resuming instead of creating...');
+                return await this.resumeGame(accessCode);
+            }
+
             // Create player
             this.player = new Player(accessCode);
 
