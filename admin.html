@@ -328,6 +328,22 @@
             </div>
         </div>
 
+        <!-- Code Management Section -->
+        <div class="section">
+            <h2>🎟️ Code Management</h2>
+            <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 200px;">
+                    <label style="display: block; margin-bottom: 8px; color: #aaa; font-size: 14px;">Manually Add
+                        6-Digit Code</label>
+                    <input type="text" id="manual-code" placeholder="e.g. 123456" maxlength="6"
+                        style="width: 100%; padding: 12px; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; background: rgba(255,255,255,0.05); color: white; font-size: 16px;">
+                </div>
+                <button class="btn btn-refresh" onclick="createManualCode()"
+                    style="padding: 12px 25px; height: 46px;">Add Code</button>
+            </div>
+            <p id="code-status-msg" style="margin-top: 10px; font-size: 14px; display: none;"></p>
+        </div>
+
         <!-- Players Table -->
         <div class="section">
             <h2>👥 All Players</h2>
@@ -402,6 +418,63 @@
         window.logout = function () {
             sessionStorage.removeItem('admin_logged_in');
             location.reload();
+        };
+
+        // Create manual code
+        window.createManualCode = async function () {
+            const input = document.getElementById('manual-code');
+            const msgEl = document.getElementById('code-status-msg');
+            const code = input.value.trim();
+
+            if (!code || code.length !== 6 || !/^\d+$/.test(code)) {
+                msgEl.textContent = '❌ Error: Enter a valid 6-digit number.';
+                msgEl.style.color = '#dc3545';
+                msgEl.style.display = 'block';
+                return;
+            }
+
+            try {
+                // Check if already exists
+                const { data: existing } = await supabaseClient
+                    .from('access_codes')
+                    .select('code')
+                    .eq('code', code)
+                    .maybeSingle();
+
+                if (existing) {
+                    msgEl.textContent = '❌ Error: Code already exists.';
+                    msgEl.style.color = '#dc3545';
+                    msgEl.style.display = 'block';
+                    return;
+                }
+
+                const { error } = await supabaseClient
+                    .from('access_codes')
+                    .insert([{
+                        code: code,
+                        status: 'unused',
+                        created_at: new Date().toISOString()
+                    }]);
+
+                if (error) throw error;
+
+                msgEl.textContent = `✅ Success: Code ${code} added!`;
+                msgEl.style.color = '#28a745';
+                msgEl.style.display = 'block';
+                input.value = '';
+
+                // Refresh tables to show new code
+                refreshData();
+
+                // Hide message after 5 seconds
+                setTimeout(() => { msgEl.style.display = 'none'; }, 5000);
+
+            } catch (err) {
+                console.error('Failed to create code:', err);
+                msgEl.textContent = '❌ Database error: ' + err.message;
+                msgEl.style.color = '#dc3545';
+                msgEl.style.display = 'block';
+            }
         };
 
         // Refresh all data
