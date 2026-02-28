@@ -121,7 +121,7 @@ async function handleStartClick() {
     const statusEl = document.getElementById('ar-status');
 
     if (!code || code.length !== 6) {
-        showErrorMessage('Please enter a valid 6-digit code');
+        showInlineError('❌ Please enter a 6-digit code');
         return;
     }
 
@@ -131,27 +131,8 @@ async function handleStartClick() {
     const result = await gameManager.validateCode(code);
 
     if (!result.valid) {
-        // Show inline error after 1 second
-        setTimeout(() => {
-            const errorMsg = document.getElementById('codeErrorMsg');
-            const codeInput = document.getElementById('accessCodeInput');
-
-            if (errorMsg) {
-                errorMsg.textContent = '❌ Your code is incorrect';
-                errorMsg.classList.add('visible');
-            }
-            if (codeInput) {
-                codeInput.classList.add('input-error');
-            }
-
-            statusEl.textContent = 'Enter your code';
-
-            // Hide error after 3 seconds
-            setTimeout(() => {
-                if (errorMsg) errorMsg.classList.remove('visible');
-                if (codeInput) codeInput.classList.remove('input-error');
-            }, 3000);
-        }, 1000);
+        // Show inline error instantly
+        showInlineError('❌ Your code is incorrect');
         return;
     }
 
@@ -304,6 +285,29 @@ function showErrorMessage(message) {
     }
     // REMOVED: alert(message) - this was blocking the camera!
     console.warn('Game Error:', message);
+}
+
+function showInlineError(message) {
+    const errorMsg = document.getElementById('codeErrorMsg');
+    const codeInput = document.getElementById('accessCodeInput');
+    const statusEl = document.getElementById('ar-status');
+
+    if (errorMsg) {
+        errorMsg.textContent = message;
+        errorMsg.classList.add('visible');
+    }
+    if (codeInput) {
+        codeInput.classList.add('input-error');
+    }
+    if (statusEl) {
+        statusEl.textContent = 'Enter your code';
+    }
+
+    // Hide error after 3 seconds
+    setTimeout(() => {
+        if (errorMsg) errorMsg.classList.remove('visible');
+        if (codeInput) codeInput.classList.remove('input-error');
+    }, 3000);
 }
 
 function togglePanelState() {
