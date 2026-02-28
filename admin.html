@@ -477,28 +477,51 @@
             }
         };
 
-        // Refresh all data
+        // Refresh all data with improved performance
         window.refreshData = async function () {
-            await Promise.all([
-                loadStats(),
-                loadPlayers(),
-                loadRewards()
-            ]);
-            document.getElementById('last-updated').textContent =
-                'Last updated: ' + new Date().toLocaleTimeString();
+            const refreshBtn = document.querySelector('.btn-refresh');
+            if (refreshBtn) {
+                refreshBtn.disabled = true;
+                refreshBtn.textContent = '🔄 Loading...';
+            }
+
+            try {
+                // Load stats sequentially to reduce simultaneous connections
+                await loadStats();
+                await loadPlayers();
+                await loadRewards();
+
+                document.getElementById('last-updated').textContent =
+                    'Last updated: ' + new Date().toLocaleTimeString();
+            } catch (err) {
+                console.error('Refresh failed:', err);
+            } finally {
+                if (refreshBtn) {
+                    refreshBtn.disabled = false;
+                    refreshBtn.textContent = '🔄 Refresh';
+                }
+            }
         };
 
-        // Load statistics
+        // Load statistics using COUNT (much faster)
         async function loadStats() {
             try {
-                const { data: codes } = await supabaseClient.from('access_codes').select('status');
-                if (!codes) return;
+                // Fetch counts directly using Supabase head option
+                const getCount = async (status) => {
+                    let query = supabaseClient.from('access_codes').select('*', { count: 'exact', head: true });
+                    if (status) query = query.eq('status', status);
+                    const { count, error } = await query;
+                    if (error) throw error;
+                    return count || 0;
+                };
 
-                const total = codes.length;
-                const unused = codes.filter(c => c.status === 'unused').length;
-                const active = codes.filter(c => c.status === 'active').length;
-                const completed = codes.filter(c => c.status === 'completed').length;
-                const expired = codes.filter(c => c.status === 'expired').length;
+                const [total, unused, active, completed, expired] = await Promise.all([
+                    getCount(),
+                    getCount('unused'),
+                    getCount('active'),
+                    getCount('completed'),
+                    getCount('expired')
+                ]);
 
                 document.getElementById('stat-total').textContent = total;
                 document.getElementById('stat-unused').textContent = unused;
@@ -510,13 +533,24 @@
             }
         }
 
-        // Load players
+        // Load players with column selection and ordering
         async function loadPlayers() {
+            const tbody = document.getElementById('players-table');
             try {
-                const { data: codes } = await supabaseClient.from('access_codes').select('*');
-                const { data: sessions } = await supabaseClient.from('game_sessions').select('*');
+                // Limit to 100 latest players to prevent extreme lag
+                const { data: codes, error: codeErr } = await supabaseClient
+                    .from('access_codes')
+                    .select('code, status, created_at')
+                    .order('created_at', { ascending: false })
+                    .limit(100);
 
-                const tbody = document.getElementById('players-table');
+                if (codeErr) throw codeErr;
+
+                const { data: sessions, error: sessErr } = await supabaseClient
+                    .from('game_sessions')
+                    .select('access_code, current_clue_index, rewards_earned, started_at, completed_at');
+
+                if (sessErr) throw sessErr;
 
                 if (!codes || codes.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="6" class="loading">No data found</td></tr>';
@@ -543,15 +577,21 @@
                 }).join('');
             } catch (error) {
                 console.error('Error loading players:', error);
+                tbody.innerHTML = `<tr><td colspan="6" class="loading" style="color: var(--danger)">⚠️ Error loading data. Please try again.</td></tr>`;
             }
         }
 
-        // Load rewards
+        // Load rewards with column selection
         async function loadRewards() {
+            const tbody = document.getElementById('rewards-table');
             try {
-                const { data: sessions } = await supabaseClient.from('game_sessions').select('access_code, rewards_earned');
+                const { data: sessions, error } = await supabaseClient
+                    .from('game_sessions')
+                    .select('access_code, rewards_earned')
+                    .not('rewards_earned', 'is', null)
+                    .order('completed_at', { ascending: false });
 
-                const tbody = document.getElementById('rewards-table');
+                if (error) throw error;
 
                 let allRewards = [];
                 sessions?.forEach(session => {
@@ -570,7 +610,8 @@
                     return;
                 }
 
-                tbody.innerHTML = allRewards.map(r => `
+                // Show only latest 50 rewards
+                tbody.innerHTML = allRewards.slice(0, 50).map(r => `
                     <tr>
                         <td><strong>${r.access_code}</strong></td>
                         <td>${r.id}</td>
@@ -580,6 +621,7 @@
                 `).join('');
             } catch (error) {
                 console.error('Error loading rewards:', error);
+                tbody.innerHTML = `<tr><td colspan="4" class="loading" style="color: var(--danger)">⚠️ Error loading rewards.</td></tr>`;
             }
         }
 
