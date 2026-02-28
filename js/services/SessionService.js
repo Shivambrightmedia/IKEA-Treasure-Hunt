@@ -23,6 +23,7 @@ class SessionService {
             access_code: accessCode,
             started_at: now.toISOString(),
             expires_at: expiresAt.toISOString(),
+            remaining_seconds: CONFIG.GAME_DURATION_MINUTES * 60, // Store total seconds
             current_clue_index: 0,
             completed_clues: [],
             assigned_clues: assignedClues,
@@ -137,8 +138,9 @@ class SessionService {
      * @returns {boolean} True if expired
      */
     isExpired(session) {
-        if (!session || !session.expires_at) return true;
-        return new Date() > new Date(session.expires_at);
+        if (!session) return true;
+        // Check if no remaining seconds left
+        return (session.remaining_seconds || 0) <= 0;
     }
 
     /**

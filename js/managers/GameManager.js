@@ -23,6 +23,9 @@ class GameManager {
         this.onGameEnd = null;
         this.onRewardUnlock = null;
         this.onError = null;
+
+        // Internal sync
+        this._syncInterval = null;
     }
 
     /**
@@ -82,6 +85,9 @@ class GameManager {
             // Start timer
             this.startTimer(session.expires_at);
 
+            // Start auto-save heartbeat
+            this._startAutoSync();
+
             // Load first clue
             this.loadCurrentClue();
 
@@ -121,16 +127,23 @@ class GameManager {
                 return;
             }
 
-            // Check if expired
-            if (this.sessionService.isExpired(session)) {
-                await this.handleGameExpiry();
-                return;
-            }
+            // RECALCULATE EXPIRY: Resume from where they left off
+            // New expiry = Current Time + Remaining Seconds from database
+            const newExpiry = new Date(Date.now() + (session.remaining_seconds * 1000));
+            session.expires_at = newExpiry.toISOString();
+
+            // Sync this new expiry back to database so it stays consistent
+            await this.sessionService.updateProgress(accessCode, {
+                expires_at: session.expires_at
+            });
 
             this.player.loadFromSession(session);
 
             // Start timer with remaining time
             this.startTimer(session.expires_at);
+
+            // Start auto-save heartbeat (update database every 10s)
+            this._startAutoSync();
 
             // Load current clue
             this.loadCurrentClue();
@@ -323,6 +336,7 @@ class GameManager {
             console.log('🎉 All clues found! Completing game...');
 
             if (this.timerManager) this.timerManager.stop();
+            if (this._syncInterval) clearInterval(this._syncInterval);
 
             // No separate final reward - the 3rd milestone IS the final reward
             // All 3 rewards are already given via checkMilestoneReward()
@@ -360,6 +374,7 @@ class GameManager {
     async handleGameExpiry() {
         try {
             if (this.timerManager) this.timerManager.stop();
+            if (this._syncInterval) clearInterval(this._syncInterval);
 
             if (this.player) {
                 await this.sessionService.markExpired(this.player.accessCode);
@@ -378,6 +393,31 @@ class GameManager {
         } catch (error) {
             console.error('Game expiry error:', error);
         }
+    }
+
+    /**
+     * Periodically sync remaining time to database (Auto-save)
+     * This allows the game to 'pause' when closed and resume correctly
+     */
+    _startAutoSync() {
+        if (this._syncInterval) clearInterval(this._syncInterval);
+
+        this._syncInterval = setInterval(async () => {
+            if (!this.player || !this.timerManager || !this.timerManager.isRunning()) {
+                return;
+            }
+
+            const remainingSeconds = Math.floor(this.timerManager.getRemainingMs() / 1000);
+
+            try {
+                await this.sessionService.updateProgress(this.player.accessCode, {
+                    remaining_seconds: remainingSeconds,
+                    last_activity: new Date().toISOString()
+                });
+            } catch (err) {
+                console.warn('Silent sync failed:', err.message);
+            }
+        }, 10000); // Every 10 seconds
     }
 
     /**
