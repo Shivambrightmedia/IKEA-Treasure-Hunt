@@ -167,12 +167,13 @@ class GameManager {
     }
 
     /**
-     * Show end screen for a completed game (without resuming active gameplay)
+     * Show end screen for a completed or expired game
      * @param {string} accessCode - Access code
+     * @param {string} reason - 'completed' or 'expired'
      */
-    async showCompletedGame(accessCode) {
+    async showEndResults(accessCode, reason) {
         try {
-            console.log('Displaying completed game for:', accessCode);
+            console.log(`Displaying ${reason} results for:`, accessCode);
 
             // Create player
             this.player = new Player(accessCode);
@@ -181,26 +182,26 @@ class GameManager {
             const session = await this.sessionService.getSession(accessCode);
 
             if (!session) {
-                console.error('No session found for completed code');
-                if (this.onError) this.onError('Could not find your reward records.');
+                console.error('No session found for code');
+                if (this.onError) this.onError('Could not find your records.');
                 return;
             }
 
             // Load player data
             this.player.loadFromSession(session);
 
-            // Show end screen
+            // Show end screen with correct reason
             if (this.onGameEnd) {
-                this.onGameEnd('completed', this.player.getDashboard(0));
+                this.onGameEnd(reason, this.player.getDashboard(0));
             }
 
             // Notify UI of successful "entry"
             if (this.onStateChange) {
-                this.onStateChange('completed_view', this.player.getDashboard(0));
+                this.onStateChange('results_view', this.player.getDashboard(0));
             }
 
         } catch (error) {
-            console.error('Show completed game error:', error);
+            console.error('Show results error:', error);
             if (this.onError) this.onError('Failed to load your rewards. Please try again.');
         }
     }

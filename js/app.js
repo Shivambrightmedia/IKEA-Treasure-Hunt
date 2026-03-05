@@ -144,9 +144,11 @@ async function handleStartClick() {
         // Show message
         statusEl.textContent = result.message;
 
-        // Start, resume, or show completed game
+        // Start, resume, or show results for ended games
         if (result.isCompleted) {
-            await gameManager.showCompletedGame(code);
+            await gameManager.showEndResults(code, 'completed');
+        } else if (result.isExpired) {
+            await gameManager.showEndResults(code, 'expired');
         } else if (result.isResume) {
             await gameManager.resumeGame(code);
         } else {

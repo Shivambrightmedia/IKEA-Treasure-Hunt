@@ -79,7 +79,13 @@ class AccessCodeService {
         }
 
         if (record.status === CONFIG.GAME_STATUS.EXPIRED) {
-            return { valid: false, error: 'This code has expired.' };
+            return {
+                valid: true,
+                data: record,
+                isResume: false,
+                isExpired: true,
+                message: 'Time is up! You can still view your earned rewards.'
+            };
         }
 
         // Valid code - check if resuming or new
