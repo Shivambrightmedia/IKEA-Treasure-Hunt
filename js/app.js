@@ -144,8 +144,10 @@ async function handleStartClick() {
         // Show message
         statusEl.textContent = result.message;
 
-        // Start or resume game
-        if (result.isResume) {
+        // Start, resume, or show completed game
+        if (result.isCompleted) {
+            await gameManager.showCompletedGame(code);
+        } else if (result.isResume) {
             await gameManager.resumeGame(code);
         } else {
             await gameManager.startNewGame(code);
@@ -249,7 +251,12 @@ function showEndScreen(reason, dashboard) {
 
         if (reason === 'completed') {
             if (titleEl) titleEl.textContent = 'Congratulations!';
-            if (messageEl) messageEl.textContent = 'You have found all the treasures!';
+            if (messageEl) {
+                messageEl.innerHTML = `You have found all the treasures!<br>
+                    <span style="font-size:0.9em; color:var(--ikea-blue); font-weight:bold;">
+                        Total Time: ${dashboard.timeTaken || 'Unknown'}
+                    </span>`;
+            }
         } else {
             if (titleEl) titleEl.textContent = 'Time\'s Up!';
             if (messageEl) messageEl.textContent = `You found ${dashboard.progress} of ${dashboard.totalClues} clues.`;

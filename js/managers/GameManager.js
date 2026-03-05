@@ -156,7 +156,6 @@ class GameManager {
             console.log('Game resumed:', accessCode);
         } catch (error) {
             console.error('Resume game error:', error);
-            // Try to start new game as fallback
             try {
                 console.log('Attempting to start new game as fallback...');
                 await this.startNewGame(accessCode);
@@ -164,6 +163,45 @@ class GameManager {
                 console.error('Fallback also failed:', fallbackError);
                 if (this.onError) this.onError('Failed to start game. Please try again.');
             }
+        }
+    }
+
+    /**
+     * Show end screen for a completed game (without resuming active gameplay)
+     * @param {string} accessCode - Access code
+     */
+    async showCompletedGame(accessCode) {
+        try {
+            console.log('Displaying completed game for:', accessCode);
+
+            // Create player
+            this.player = new Player(accessCode);
+
+            // Get existing session
+            const session = await this.sessionService.getSession(accessCode);
+
+            if (!session) {
+                console.error('No session found for completed code');
+                if (this.onError) this.onError('Could not find your reward records.');
+                return;
+            }
+
+            // Load player data
+            this.player.loadFromSession(session);
+
+            // Show end screen
+            if (this.onGameEnd) {
+                this.onGameEnd('completed', this.player.getDashboard(0));
+            }
+
+            // Notify UI of successful "entry"
+            if (this.onStateChange) {
+                this.onStateChange('completed_view', this.player.getDashboard(0));
+            }
+
+        } catch (error) {
+            console.error('Show completed game error:', error);
+            if (this.onError) this.onError('Failed to load your rewards. Please try again.');
         }
     }
 
@@ -338,8 +376,12 @@ class GameManager {
             if (this.timerManager) this.timerManager.stop();
             if (this._syncInterval) clearInterval(this._syncInterval);
 
-            // No separate final reward - the 3rd milestone IS the final reward
-            // All 3 rewards are already given via checkMilestoneReward()
+            // Sync final time for accurate "time taken" display
+            const finalRemainingSeconds = Math.floor((this.timerManager?.getRemainingMs() || 0) / 1000);
+            await this.sessionService.updateProgress(this.player.accessCode, {
+                remaining_seconds: finalRemainingSeconds,
+                last_activity: new Date().toISOString()
+            });
 
             // Mark session and code as completed
             await this.sessionService.markCompleted(this.player.accessCode);

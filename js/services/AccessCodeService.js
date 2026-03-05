@@ -69,7 +69,13 @@ class AccessCodeService {
         }
 
         if (record.status === CONFIG.GAME_STATUS.COMPLETED) {
-            return { valid: false, error: 'This code has already been used.', canResume: false };
+            return {
+                valid: true,
+                data: record,
+                isResume: false,
+                isCompleted: true,
+                message: 'Welcome back! You have already completed this hunt.'
+            };
         }
 
         if (record.status === CONFIG.GAME_STATUS.EXPIRED) {

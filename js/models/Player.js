@@ -78,6 +78,17 @@ class Player {
         const minutes = Math.floor(remainingTimeMs / 60000);
         const seconds = Math.floor((remainingTimeMs % 60000) / 1000);
 
+        // Calculate time taken if completed
+        let timeTaken = null;
+        if (this.session?.status === CONFIG.GAME_STATUS.COMPLETED) {
+            const totalSeconds = CONFIG.GAME_DURATION_MINUTES * 60;
+            const remainingSeconds = this.session.remaining_seconds || 0;
+            const takenSeconds = totalSeconds - remainingSeconds;
+            const takenMins = Math.floor(takenSeconds / 60);
+            const takenSecs = takenSeconds % 60;
+            timeTaken = `${takenMins}m ${takenSecs}s`;
+        }
+
         return {
             accessCode: this.accessCode,
             progress: this.getCompletedClues().length,
@@ -86,6 +97,7 @@ class Player {
             rewards: this.getRewards(),
             timeRemaining: `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`,
             timeRemainingMs: remainingTimeMs,
+            timeTaken: timeTaken,
             isLowTime: remainingTimeMs < CONFIG.TIMER_WARNING_MINUTES * 60 * 1000,
             status: this.session?.status || 'unknown'
         };
