@@ -77,29 +77,18 @@ app.post('/api/validate-code', asyncHandler(async (req, res) => {
         return res.status(404).json({ error: 'Code not found. Please check and try again.' });
     }
 
-    let response = {
+    // Return the record directly (AccessCodeService expects this shape)
+    // Include status fields at top level for frontend compatibility
+    res.json({
+        ...record,
         valid: true,
-        data: record,
         isResume: record.status === 'active',
         isCompleted: record.status === 'completed',
-        isExpired: record.status === 'expired',
-        message: ''
-    };
-
-    if (response.isCompleted) {
-        response.message = 'Welcome back! You have already completed this hunt.';
-    } else if (response.isExpired) {
-        response.message = 'Time is up! You can still view your earned rewards.';
-    } else if (response.isResume) {
-        response.message = 'Welcome back! Resuming your game...';
-    } else {
-        response.message = 'Code verified! Starting game...';
-    }
-
-    res.json(response);
+        isExpired: record.status === 'expired'
+    });
 }));
 
-app.get('/api/session/:code', validateSession, asyncHandler(async (req, res) => {
+app.get('/api/session/:code', asyncHandler(async (req, res) => {
     const { code } = req.params;
     const { data, error } = await supabase
         .from('game_sessions')

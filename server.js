@@ -102,7 +102,7 @@ app.post('/api/validate-code', asyncHandler(async (req, res) => {
 /**
  * Get Session Data
  */
-app.get('/api/session/:code', validateSession, asyncHandler(async (req, res) => {
+app.get('/api/session/:code', asyncHandler(async (req, res) => {
     const { code } = req.params;
 
     const { data, error } = await supabase
