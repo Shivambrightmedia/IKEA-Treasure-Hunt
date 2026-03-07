@@ -4,7 +4,7 @@
   "main": "webar.js",
   "scripts": {
     "start": "node server.js",
-    "build": "mkdir -p dist/js/managers dist/js/models dist/js/services && cp index.html admin.html targets.mind dist/ && cp -r assets dist/ && for f in js/**/*.js; do terser \"$f\" -o \"dist/$f\" --compress --mangle --no-source-map; done",
+    "build": "bash build.sh",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
