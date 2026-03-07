@@ -385,25 +385,11 @@
             <p class="last-updated" id="last-updated"></p>
         </div>
 
-        <!-- Rewards Table -->
+        <!-- Rewards Section -->
         <div class="section">
             <h2>🎁 All Rewards Issued</h2>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Access Code</th>
-                            <th>Reward ID</th>
-                            <th>Barcode</th>
-                            <th>Unlocked At</th>
-                        </tr>
-                    </thead>
-                    <tbody id="rewards-table">
-                        <tr>
-                            <td colspan="4" class="loading">Loading...</td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div id="rewards-container" style="display: flex; flex-direction: column; gap: 16px;">
+                <p class="loading">Loading...</p>
             </div>
         </div>
     </div>
@@ -532,21 +518,46 @@
         }
 
         async function loadRewards() {
-            const tbody = document.getElementById('rewards-table');
+            const container = document.getElementById('rewards-container');
             const rewards = await fetchAdmin('/rewards');
 
             if (rewards.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="loading">No rewards issued yet</td></tr>';
+                container.innerHTML = '<p class="loading">No rewards issued yet</p>';
                 return;
             }
 
-            tbody.innerHTML = rewards.map(r => `
-                <tr>
-                    <td><strong>${r.access_code}</strong></td>
-                    <td>${r.id}</td>
-                    <td><code>${r.barcode}</code></td>
-                    <td>${r.unlocked_at ? new Date(r.unlocked_at).toLocaleString() : '-'}</td>
-                </tr>
+            // Group rewards by access code
+            const grouped = {};
+            rewards.forEach(r => {
+                if (!grouped[r.access_code]) grouped[r.access_code] = [];
+                grouped[r.access_code].push(r);
+            });
+
+            container.innerHTML = Object.entries(grouped).map(([code, playerRewards]) => `
+                <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 16px; margin-bottom: 4px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <span style="font-size: 18px; font-weight: 700; color: #f1c40f;">🎫 ${code}</span>
+                        <span style="background: #27ae60; color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;">${playerRewards.length} Reward${playerRewards.length > 1 ? 's' : ''}</span>
+                    </div>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <th style="text-align: left; padding: 6px 8px; font-size: 12px; color: #aaa;">Reward</th>
+                                <th style="text-align: left; padding: 6px 8px; font-size: 12px; color: #aaa;">Barcode</th>
+                                <th style="text-align: left; padding: 6px 8px; font-size: 12px; color: #aaa;">Unlocked At</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${playerRewards.map((r, i) => `
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                    <td style="padding: 8px; font-weight: 600;">⭐ ${r.type === 'final' ? 'Final Reward' : 'Milestone ' + r.milestone}</td>
+                                    <td style="padding: 8px;"><code style="background: rgba(255,255,255,0.1); padding: 3px 8px; border-radius: 4px; font-size: 13px;">${r.barcode}</code></td>
+                                    <td style="padding: 8px; color: #aaa; font-size: 13px;">${r.unlocked_at ? new Date(r.unlocked_at).toLocaleString() : '-'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
             `).join('');
         }
 
