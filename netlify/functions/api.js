@@ -110,9 +110,27 @@ app.post('/api/session', asyncHandler(async (req, res) => {
 
 app.post('/api/session/complete-clue', asyncHandler(async (req, res) => {
     const { access_code, clue_id, next_index } = req.body;
-    const { data: session } = await supabase.from('game_sessions').select('*').eq('access_code', access_code).single();
-    if (!session) return res.status(404).json({ error: 'Not found' });
 
+    if (!access_code || clue_id === undefined || next_index === undefined) {
+        return res.status(400).json({ error: 'Missing required fields', received: { access_code, clue_id, next_index } });
+    }
+
+    // 1. Get session (use maybeSingle to avoid throw on no rows)
+    const { data: session, error: fetchErr } = await supabase
+        .from('game_sessions')
+        .select('*')
+        .eq('access_code', access_code)
+        .maybeSingle();
+
+    if (fetchErr) {
+        console.error('Fetch session error:', fetchErr);
+        return res.status(500).json({ error: 'Database read failed', detail: fetchErr.message });
+    }
+    if (!session) {
+        return res.status(404).json({ error: 'Session not found for code: ' + access_code });
+    }
+
+    // 2. Build updates
     const completedClues = [...(session.completed_clues || []), clue_id];
     const rewards = [...(session.rewards_earned || [])];
     const milestones = [1, 2, 3];
@@ -123,8 +141,25 @@ app.post('/api/session/complete-clue', asyncHandler(async (req, res) => {
         rewards.push({ id: rewardId, milestone: completedClues.length, barcode, unlocked_at: new Date().toISOString(), redeemed: false, type: completedClues.length === 3 ? 'final' : 'milestone' });
     }
 
-    const { data: updated } = await supabase.from('game_sessions').update({ completed_clues, current_clue_index: next_index, rewards_earned: rewards, last_activity: new Date().toISOString() }).eq('access_code', access_code).select().single();
-    res.json(updated);
+    // 3. Update
+    const { data: updated, error: updateErr } = await supabase
+        .from('game_sessions')
+        .update({
+            completed_clues: completedClues,
+            current_clue_index: next_index,
+            rewards_earned: rewards,
+            last_activity: new Date().toISOString()
+        })
+        .eq('access_code', access_code)
+        .select()
+        .maybeSingle();
+
+    if (updateErr) {
+        console.error('Update session error:', updateErr);
+        return res.status(500).json({ error: 'Database update failed', detail: updateErr.message });
+    }
+
+    res.json(updated || session);
 }));
 
 app.post('/api/session/update', validateSession, asyncHandler(async (req, res) => {
@@ -172,10 +207,10 @@ app.post('/api/admin/create-code', validateAdmin, asyncHandler(async (req, res) 
     res.json({ success: true });
 }));
 
-// Global Error Handler (Requirement 8)
+// Global Error Handler
 app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({ error: 'Server Error' });
+    console.error('Unhandled error:', err.stack);
+    res.status(500).json({ error: 'Server Error', detail: err.message, path: req.path });
 });
 
 module.exports.handler = serverless(app);
