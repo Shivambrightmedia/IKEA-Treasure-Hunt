@@ -1,0 +1,32 @@
+{
+  "name": "ikea-treasure-hunt",
+  "version": "1.0.0",
+  "main": "webar.js",
+  "scripts": {
+    "start": "node server.js",
+    "build": "mkdir -p dist/js/managers dist/js/models dist/js/services && cp index.html admin.html targets.mind dist/ && cp -r assets dist/ && for f in js/**/*.js; do terser \"$f\" -o \"dist/$f\" --compress --mangle --no-source-map; done",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shivambrightmedia/IKEA-Treasure-Hunt.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Shivambrightmedia/IKEA-Treasure-Hunt/issues"
+  },
+  "homepage": "https://github.com/Shivambrightmedia/IKEA-Treasure-Hunt#readme",
+  "description": "",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.98.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "serverless-http": "^4.0.0"
+  },
+  "devDependencies": {
+    "terser": "^5.46.0"
+  }
+}

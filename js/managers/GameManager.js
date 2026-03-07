@@ -39,6 +39,7 @@ class GameManager {
         this.onGameEnd = callbacks.onGameEnd || null;
         this.onRewardUnlock = callbacks.onRewardUnlock || null;
         this.onError = callbacks.onError || null;
+        this.lastRewardId = null;
     }
 
     /**
@@ -286,12 +287,9 @@ class GameManager {
                 nextIndex
             );
 
-            // Refresh session data
+            // Refresh session data (this now includes rewards earned on server)
             const updatedSession = await this.sessionService.getSession(this.player.accessCode);
             this.player.loadFromSession(updatedSession);
-
-            // Check for milestone reward
-            await this.checkMilestoneReward();
 
             // Load next clue or complete game
             this.loadCurrentClue();
@@ -301,6 +299,16 @@ class GameManager {
                 this.onStateChange('clue_completed', this.player.getDashboard(this.timerManager.getRemainingMs()));
             }
 
+            // If a new reward was added by the server, notify the UI
+            // (The session data was updated above)
+            const latestReward = updatedSession.rewards_earned[updatedSession.rewards_earned.length - 1];
+            if (latestReward && (!this.lastRewardId || this.lastRewardId !== latestReward.id)) {
+                this.lastRewardId = latestReward.id;
+                if (this.onRewardUnlock) {
+                    this.onRewardUnlock(latestReward);
+                }
+            }
+
         } catch (error) {
             console.error('Complete clue error:', error);
             if (this.onError) this.onError('Failed to save progress. Please try again.');
@@ -308,53 +316,12 @@ class GameManager {
     }
 
     /**
-     * Check if player earned a milestone reward
+     * Generate a unique barcode for rewards
+     * @returns {string} Barcode string
      */
-    async checkMilestoneReward() {
-        const completedCount = this.player.getCompletedClues().length;
-        const rewardId = `reward_${completedCount}`;
-
-        console.log(`Checking milestone for ${completedCount} clues, rewardId: ${rewardId}`);
-
-        if (CONFIG.MILESTONES.includes(completedCount)) {
-            // Query database DIRECTLY to check if reward already exists (most reliable)
-            let existingRewards = [];
-            try {
-                const currentSession = await this.sessionService.getSession(this.player.accessCode);
-                existingRewards = currentSession?.rewards_earned || [];
-            } catch (err) {
-                console.warn('Could not fetch session for reward check:', err.message);
-            }
-
-            // Check if this specific reward already exists
-            if (existingRewards.some(r => r.id === rewardId)) {
-                console.log(`Reward ${rewardId} already exists in database, skipping...`);
-                return;
-            }
-
-            const reward = {
-                id: rewardId,
-                milestone: completedCount,
-                barcode: this.generateBarcode(),
-                unlocked_at: new Date().toISOString(),
-                redeemed: false,
-                type: completedCount === CONFIG.TOTAL_CLUES_PER_SESSION ? 'final' : 'milestone'
-            };
-
-            await this.sessionService.addReward(this.player.accessCode, reward);
-
-            // Refresh player session with new reward
-            const updatedSession = await this.sessionService.getSession(this.player.accessCode);
-            if (updatedSession) {
-                this.player.loadFromSession(updatedSession);
-            }
-
-            if (this.onRewardUnlock) {
-                this.onRewardUnlock(reward);
-            }
-
-            console.log(`✅ Milestone reward ${completedCount} added:`, reward.barcode);
-        }
+    generateBarcode() {
+        // Now handled on server
+        return 'REPLACED-ON-SERVER';
     }
 
     /**

@@ -409,30 +409,51 @@
     </div>
 
     <script>
-        // Configuration
-        const SUPABASE_URL = 'https://bafnhfmuzkndvpmwrwho.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhZm5oZm11emtuZHZwbXdyd2hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNzA3MjEsImV4cCI6MjA4Nzg0NjcyMX0.UsyXv7oNkhMQc48lqybDSPk0CNTwFg4sqEfumhMwinQ';
-        const ADMIN_PASSWORD = 'ikea2024';
+        // Configuration - No more keys here! (Requirement 2 & 5)
+        const API_URL = window.location.origin + '/api/admin';
+        let adminPassword = '';
 
-        // Initialize Supabase client
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // Helper for authenticated fetch
+        async function fetchAdmin(endpoint, options = {}) {
+            const response = await fetch(`${API_URL}${endpoint}`, {
+                ...options,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-admin-password': adminPassword,
+                    ...options.headers
+                }
+            });
+
+            if (response.status === 401) {
+                logout();
+                throw new Error('Unauthorized');
+            }
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || 'Server error');
+            }
+
+            return await response.json();
+        }
 
         // Login function
         window.login = function () {
-            const password = document.getElementById('admin-password').value;
-            if (password === ADMIN_PASSWORD) {
+            adminPassword = document.getElementById('admin-password').value;
+            // Test the session by calling stats
+            refreshData().then(() => {
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('dashboard').classList.add('visible');
-                sessionStorage.setItem('admin_logged_in', 'true');
-                refreshData();
-            } else {
+                sessionStorage.setItem('admin_password', adminPassword);
+            }).catch(err => {
                 document.getElementById('login-error').style.display = 'block';
-            }
+                document.getElementById('login-error').textContent = 'Invalid password or server offline.';
+            });
         };
 
         // Logout function
         window.logout = function () {
-            sessionStorage.removeItem('admin_logged_in');
+            sessionStorage.removeItem('admin_password');
             location.reload();
         };
 
@@ -450,44 +471,19 @@
             }
 
             try {
-                // Check if already exists
-                const { data: existing } = await supabaseClient
-                    .from('access_codes')
-                    .select('code')
-                    .eq('code', code)
-                    .maybeSingle();
-
-                if (existing) {
-                    msgEl.textContent = '❌ Error: Code already exists.';
-                    msgEl.style.color = '#dc3545';
-                    msgEl.style.display = 'block';
-                    return;
-                }
-
-                const { error } = await supabaseClient
-                    .from('access_codes')
-                    .insert([{
-                        code: code,
-                        status: 'unused',
-                        created_at: new Date().toISOString()
-                    }]);
-
-                if (error) throw error;
+                await fetchAdmin('/create-code', {
+                    method: 'POST',
+                    body: JSON.stringify({ code })
+                });
 
                 msgEl.textContent = `✅ Success: Code ${code} added!`;
                 msgEl.style.color = '#28a745';
                 msgEl.style.display = 'block';
                 input.value = '';
-
-                // Refresh tables to show new code
                 refreshData();
-
-                // Hide message after 5 seconds
                 setTimeout(() => { msgEl.style.display = 'none'; }, 5000);
-
             } catch (err) {
-                console.error('Failed to create code:', err);
-                msgEl.textContent = '❌ Database error: ' + err.message;
+                msgEl.textContent = '❌ Error: ' + err.message;
                 msgEl.style.color = '#dc3545';
                 msgEl.style.display = 'block';
             }
@@ -495,195 +491,82 @@
 
         // Refresh all data
         window.refreshData = async function () {
-            const refreshBtn = document.querySelector('.btn-refresh');
-            if (refreshBtn) {
-                refreshBtn.disabled = true;
-                refreshBtn.textContent = '🔄 Loading...';
-            }
-
             try {
-                // First test: Simple stats
-                await loadStats();
+                const stats = await fetchAdmin('/stats');
+                document.getElementById('stat-total').textContent = stats.total;
+                document.getElementById('stat-unused').textContent = stats.unused;
+                document.getElementById('stat-active').textContent = stats.active;
+                document.getElementById('stat-completed').textContent = stats.completed;
+                document.getElementById('stat-expired').textContent = stats.expired;
+
                 await loadPlayers();
                 await loadRewards();
 
                 document.getElementById('last-updated').textContent =
                     'Last updated: ' + new Date().toLocaleTimeString();
-                document.getElementById('diagnostic-panel').style.display = 'none';
             } catch (err) {
                 console.error('Refresh failed:', err);
-                document.getElementById('diagnostic-panel').style.display = 'block';
-                document.getElementById('diagnostic-output').textContent += `\n[${new Date().toLocaleTimeString()}] ${err.message}`;
-            } finally {
-                if (refreshBtn) {
-                    refreshBtn.disabled = false;
-                    refreshBtn.textContent = '🔄 Refresh';
-                }
+                throw err;
             }
         };
 
-        // Network check helper
-        window.testConnection = async function () {
-            const out = document.getElementById('diagnostic-output');
-            out.textContent = "Starting diagnostic test...\n";
-
-            try {
-                out.textContent += "1. Pinging Supabase API endpoint...";
-                const start = Date.now();
-                const response = await fetch(SUPABASE_URL + '/rest/v1/', {
-                    method: 'GET',
-                    headers: { 'apikey': SUPABASE_KEY }
-                });
-                out.textContent += ` SUCCESS (${Date.now() - start}ms)\n`;
-                out.textContent += `2. API Key Format check: ${SUPABASE_KEY.startsWith('sb_') ? 'Custom/Legacy' : 'Standard JWT'}\n`;
-                out.textContent += "3. Status: Database endpoint is reachable.";
-            } catch (e) {
-                out.textContent += ` FAILED!\nError: ${e.message}\n`;
-                out.textContent += "\nRECOMMENDATION:\n- Try a Mobile Hotspot (avoid corporate/office Wi-Fi)\n- Turn OFF VPNs\n- Check if Supabase project is paused in the dashboard";
-            }
-        }
-
-        // Load statistics using a SINGLE request (much more stable for slow networks)
-        async function loadStats() {
-            try {
-                // Fetch just the status column from all rows in one go
-                const { data, error } = await supabaseClient.from('access_codes').select('status');
-
-                if (error) throw error;
-                if (!data) return;
-
-                const counts = data.reduce((acc, curr) => {
-                    acc[curr.status] = (acc[curr.status] || 0) + 1;
-                    acc.total++;
-                    return acc;
-                }, { total: 0, unused: 0, active: 0, completed: 0, expired: 0 });
-
-                document.getElementById('stat-total').textContent = counts.total;
-                document.getElementById('stat-unused').textContent = counts.unused;
-                document.getElementById('stat-active').textContent = counts.active;
-                document.getElementById('stat-completed').textContent = counts.completed;
-                document.getElementById('stat-expired').textContent = counts.expired;
-            } catch (error) {
-                console.error('Error loading stats:', error);
-                document.querySelectorAll('.stat-card .number').forEach(el => el.textContent = '⚠️');
-            }
-        }
-
-        // Load players with column selection and ordering
         async function loadPlayers() {
             const tbody = document.getElementById('players-table');
-            try {
-                // Limit to 100 latest players to prevent extreme lag
-                const { data: codes, error: codeErr } = await supabaseClient
-                    .from('access_codes')
-                    .select('code, status, created_at')
-                    .order('created_at', { ascending: false })
-                    .limit(100);
+            const players = await fetchAdmin('/players');
 
-                if (codeErr) throw codeErr;
-
-                const { data: sessions, error: sessErr } = await supabaseClient
-                    .from('game_sessions')
-                    .select('access_code, current_clue_index, rewards_earned, started_at, completed_at');
-
-                if (sessErr) throw sessErr;
-
-                if (!codes || codes.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="loading">No data found</td></tr>';
-                    return;
-                }
-
-                tbody.innerHTML = codes.map(code => {
-                    const session = sessions?.find(s => s.access_code === code.code);
-                    const cluesDone = session?.current_clue_index || 0;
-                    const rewards = session?.rewards_earned?.length || 0;
-                    const started = session?.started_at ? new Date(session.started_at).toLocaleString() : '-';
-                    const completedAt = session?.completed_at ? new Date(session.completed_at).toLocaleString() : '-';
-
-                    return `
-                        <tr>
-                            <td><strong>${code.code}</strong></td>
-                            <td><span class="status-badge status-${code.status}">${code.status.toUpperCase()}</span></td>
-                            <td>${cluesDone} / 3</td>
-                            <td>🎁 ${rewards}</td>
-                            <td>${started}</td>
-                            <td>${completedAt}</td>
-                        </tr>
-                    `;
-                }).join('');
-            } catch (error) {
-                console.error('Error loading players:', error);
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="6" class="loading">
-                            <div style="color: var(--danger); margin-bottom: 10px;">⚠️ Network Connection Error</div>
-                            <div style="font-size: 12px; color: #888;">It looks like your network is blocking the connection to Supabase. <br>Please check your internet, disable VPN/Ad-blockers, and try again.</div>
-                        </td>
-                    </tr>
-                `;
+            if (players.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="loading">No players found</td></tr>';
+                return;
             }
+
+            tbody.innerHTML = players.map(p => `
+                <tr>
+                    <td><strong>${p.code}</strong></td>
+                    <td><span class="status-badge status-${p.status}">${p.status.toUpperCase()}</span></td>
+                    <td>${p.cluesDone} / 3</td>
+                    <td>🎁 ${p.rewards}</td>
+                    <td>${p.started ? new Date(p.started).toLocaleString() : '-'}</td>
+                    <td>${p.completedAt ? new Date(p.completedAt).toLocaleString() : '-'}</td>
+                </tr>
+            `).join('');
         }
 
-        // Load rewards with column selection
         async function loadRewards() {
             const tbody = document.getElementById('rewards-table');
-            try {
-                const { data: sessions, error } = await supabaseClient
-                    .from('game_sessions')
-                    .select('access_code, rewards_earned')
-                    .not('rewards_earned', 'is', null)
-                    .order('completed_at', { ascending: false });
+            const rewards = await fetchAdmin('/rewards');
 
-                if (error) throw error;
-
-                let allRewards = [];
-                sessions?.forEach(session => {
-                    if (session.rewards_earned && session.rewards_earned.length > 0) {
-                        session.rewards_earned.forEach(reward => {
-                            allRewards.push({
-                                access_code: session.access_code,
-                                ...reward
-                            });
-                        });
-                    }
-                });
-
-                if (allRewards.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4" class="loading">No rewards issued yet</td></tr>';
-                    return;
-                }
-
-                // Show only latest 50 rewards
-                tbody.innerHTML = allRewards.slice(0, 50).map(r => `
-                    <tr>
-                        <td><strong>${r.access_code}</strong></td>
-                        <td>${r.id}</td>
-                        <td><code>${r.barcode}</code></td>
-                        <td>${r.unlocked_at ? new Date(r.unlocked_at).toLocaleString() : '-'}</td>
-                    </tr>
-                `).join('');
-            } catch (error) {
-                console.error('Error loading rewards:', error);
-                tbody.innerHTML = `<tr><td colspan="4" class="loading" style="color: var(--danger)">⚠️ Error loading rewards.</td></tr>`;
+            if (rewards.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="loading">No rewards issued yet</td></tr>';
+                return;
             }
+
+            tbody.innerHTML = rewards.map(r => `
+                <tr>
+                    <td><strong>${r.access_code}</strong></td>
+                    <td>${r.id}</td>
+                    <td><code>${r.barcode}</code></td>
+                    <td>${r.unlocked_at ? new Date(r.unlocked_at).toLocaleString() : '-'}</td>
+                </tr>
+            `).join('');
         }
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function () {
-            // Check if already logged in
-            if (sessionStorage.getItem('admin_logged_in') === 'true') {
+            const savedPassword = sessionStorage.getItem('admin_password');
+            if (savedPassword) {
+                adminPassword = savedPassword;
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('dashboard').classList.add('visible');
-                refreshData();
+                refreshData().catch(() => logout());
             }
 
-            // Enter key to login
             document.getElementById('admin-password').addEventListener('keypress', function (e) {
                 if (e.key === 'Enter') login();
             });
 
-            // Auto-refresh every 30 seconds
-            setInterval(refreshData, 30000);
+            setInterval(() => {
+                if (adminPassword) refreshData().catch();
+            }, 30000);
         });
     </script>
 </body>

@@ -1,75 +1,103 @@
 /**
- * DatabaseService - Supabase Wrapper
- * Single Responsibility: Handle all database operations
- * Dependency Injection ready: Can be swapped for MongoDB service
+ * DatabaseService - Proxy for Backend API
+ * Instead of Supabase, it now speaks to our secure server
  */
 
 class DatabaseService {
     constructor() {
-        this.client = window.supabase.createClient(
-            CONFIG.SUPABASE_URL,
-            CONFIG.SUPABASE_KEY
-        );
+        this.baseUrl = CONFIG.API_URL;
     }
 
-    // Generic CRUD Operations
-    async insert(table, data) {
-        const { data: result, error } = await this.client
-            .from(table)
-            .insert(data)
-            .select();
+    async fetchApi(endpoint, options = {}) {
+        const response = await fetch(`${this.baseUrl}${endpoint}`, {
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
 
-        if (error) throw new Error(`Insert failed: ${error.message}`);
-        return result;
-    }
-
-    async select(table, conditions = {}) {
-        let query = this.client.from(table).select('*');
-
-        for (const [key, value] of Object.entries(conditions)) {
-            query = query.eq(key, value);
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Server error');
         }
 
-        const { data, error } = await query;
-        if (error) throw new Error(`Select failed: ${error.message}`);
-        return data;
+        return await response.json();
     }
 
+    // Adapt selectOne to use our server's validate-code or session endpoint
     async selectOne(table, conditions = {}) {
-        let query = this.client.from(table).select('*');
-
-        for (const [key, value] of Object.entries(conditions)) {
-            query = query.eq(key, value);
+        if (table === 'access_codes' && conditions.code) {
+            return await this.fetchApi('/validate-code', {
+                method: 'POST',
+                body: JSON.stringify({ code: conditions.code })
+            });
         }
 
-        // Use limit(1) instead of maybeSingle() to avoid errors with 0 or multiple rows
-        const { data, error } = await query.limit(1);
+        if (table === 'game_sessions' && conditions.access_code) {
+            return await this.fetchApi(`/session/${conditions.access_code}`);
+        }
 
-        if (error) throw new Error(`Select failed: ${error.message}`);
+        throw new Error(`SelectOne not implemented for table ${table}`);
+    }
 
-        // Return first row or null
-        return data && data.length > 0 ? data[0] : null;
+    async insert(table, data) {
+        if (table === 'game_sessions') {
+            return [await this.fetchApi('/session', {
+                method: 'POST',
+                body: JSON.stringify(data)
+            })];
+        }
+
+        throw new Error(`Insert not implemented for table ${table}`);
     }
 
     async update(table, conditions, updates) {
-        let query = this.client.from(table).update(updates);
-
-        for (const [key, value] of Object.entries(conditions)) {
-            query = query.eq(key, value);
+        // Special Clue Completion case
+        if (table === 'game_sessions' && updates.completed_clues) {
+            // Extracts info from the update object
+            const lastCompletedId = updates.completed_clues[updates.completed_clues.length - 1];
+            return await this.fetchApi('/session/complete-clue', {
+                method: 'POST',
+                body: JSON.stringify({
+                    access_code: conditions.access_code,
+                    clue_id: lastCompletedId,
+                    next_index: updates.current_clue_index
+                })
+            });
         }
 
-        const { data, error } = await query.select();
-        if (error) throw new Error(`Update failed: ${error.message}`);
-        return data;
-    }
+        if (table === 'game_sessions' && conditions.access_code) {
+            return await this.fetchApi('/session/update', {
+                method: 'POST',
+                body: JSON.stringify({
+                    access_code: conditions.access_code,
+                    updates
+                })
+            });
+        }
 
-    async upsert(table, data) {
-        const { data: result, error } = await this.client
-            .from(table)
-            .upsert(data)
-            .select();
+        // Special case for status updates
+        if (table === 'game_sessions' && updates.status) {
+            return await this.fetchApi('/session/status', {
+                method: 'POST',
+                body: JSON.stringify({
+                    access_code: conditions.access_code || conditions.code,
+                    status: updates.status
+                })
+            });
+        }
 
-        if (error) throw new Error(`Upsert failed: ${error.message}`);
-        return result;
+        if (table === 'access_codes') {
+            return await this.fetchApi('/session/status', {
+                method: 'POST',
+                body: JSON.stringify({
+                    access_code: conditions.code,
+                    status: updates.status
+                })
+            });
+        }
+
+        throw new Error(`Update not implemented for table ${table}`);
     }
 }
