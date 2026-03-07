@@ -388,7 +388,18 @@
         <!-- Rewards Section -->
         <div class="section">
             <h2>🎁 All Rewards Issued</h2>
-            <div id="rewards-container" style="display: flex; flex-direction: column; gap: 16px;">
+            <div style="display: flex; gap: 10px; margin-bottom: 16px; align-items: center;">
+                <input type="text" id="reward-search" placeholder="🔍 Search by access code..."
+                    oninput="filterRewards()"
+                    style="flex:1; padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: #fff; font-size: 14px; outline: none;">
+                <button onclick="toggleAllRewards(true)"
+                    style="padding: 8px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08); color: #aaa; cursor: pointer; font-size: 13px; white-space: nowrap;">Expand
+                    All</button>
+                <button onclick="toggleAllRewards(false)"
+                    style="padding: 8px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08); color: #aaa; cursor: pointer; font-size: 13px; white-space: nowrap;">Collapse
+                    All</button>
+            </div>
+            <div id="rewards-container" style="display: flex; flex-direction: column; gap: 12px;">
                 <p class="loading">Loading...</p>
             </div>
         </div>
@@ -534,31 +545,84 @@
             });
 
             container.innerHTML = Object.entries(grouped).map(([code, playerRewards]) => `
-                <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 16px; margin-bottom: 4px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                        <span style="font-size: 18px; font-weight: 700; color: #f1c40f;">🎫 ${code}</span>
+                <div class="reward-card" data-code="${code}" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden;">
+                    <div onclick="toggleRewardCard(this)" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; cursor: pointer; user-select: none; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span class="collapse-icon" style="font-size: 14px; transition: transform 0.3s; display: inline-block;">▼</span>
+                            <span style="font-size: 17px; font-weight: 700; color: #f1c40f;">🎫 ${code}</span>
+                        </div>
                         <span style="background: #27ae60; color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;">${playerRewards.length} Reward${playerRewards.length > 1 ? 's' : ''}</span>
                     </div>
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <thead>
-                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                <th style="text-align: left; padding: 6px 8px; font-size: 12px; color: #aaa;">Reward</th>
-                                <th style="text-align: left; padding: 6px 8px; font-size: 12px; color: #aaa;">Barcode</th>
-                                <th style="text-align: left; padding: 6px 8px; font-size: 12px; color: #aaa;">Unlocked At</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${playerRewards.map((r, i) => `
-                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                                    <td style="padding: 8px; font-weight: 600;">⭐ ${r.type === 'final' ? 'Final Reward' : 'Milestone ' + r.milestone}</td>
-                                    <td style="padding: 8px;"><code style="background: rgba(255,255,255,0.1); padding: 3px 8px; border-radius: 4px; font-size: 13px;">${r.barcode}</code></td>
-                                    <td style="padding: 8px; color: #aaa; font-size: 13px;">${r.unlocked_at ? new Date(r.unlocked_at).toLocaleString() : '-'}</td>
+                    <div class="reward-body" style="padding: 0 16px 14px 16px; transition: max-height 0.3s ease, opacity 0.3s ease; max-height: 500px; opacity: 1; overflow: hidden;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                    <th style="text-align: left; padding: 6px 8px; font-size: 12px; color: #aaa;">Reward</th>
+                                    <th style="text-align: left; padding: 6px 8px; font-size: 12px; color: #aaa;">Barcode</th>
+                                    <th style="text-align: left; padding: 6px 8px; font-size: 12px; color: #aaa;">Unlocked At</th>
                                 </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                ${playerRewards.map(r => `
+                                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                        <td style="padding: 8px; font-weight: 600;">⭐ ${r.type === 'final' ? 'Final Reward' : 'Milestone ' + r.milestone}</td>
+                                        <td style="padding: 8px;"><code style="background: rgba(255,255,255,0.1); padding: 3px 8px; border-radius: 4px; font-size: 13px;">${r.barcode}</code></td>
+                                        <td style="padding: 8px; color: #aaa; font-size: 13px;">${r.unlocked_at ? new Date(r.unlocked_at).toLocaleString() : '-'}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             `).join('');
+        }
+
+        // Toggle single reward card
+        function toggleRewardCard(header) {
+            const card = header.parentElement;
+            const body = card.querySelector('.reward-body');
+            const icon = card.querySelector('.collapse-icon');
+            const isOpen = body.style.maxHeight !== '0px';
+
+            if (isOpen) {
+                body.style.maxHeight = '0px';
+                body.style.opacity = '0';
+                body.style.padding = '0 16px';
+                icon.style.transform = 'rotate(-90deg)';
+            } else {
+                body.style.maxHeight = '500px';
+                body.style.opacity = '1';
+                body.style.padding = '0 16px 14px 16px';
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // Toggle all reward cards
+        function toggleAllRewards(expand) {
+            document.querySelectorAll('.reward-card').forEach(card => {
+                const body = card.querySelector('.reward-body');
+                const icon = card.querySelector('.collapse-icon');
+                if (expand) {
+                    body.style.maxHeight = '500px';
+                    body.style.opacity = '1';
+                    body.style.padding = '0 16px 14px 16px';
+                    icon.style.transform = 'rotate(0deg)';
+                } else {
+                    body.style.maxHeight = '0px';
+                    body.style.opacity = '0';
+                    body.style.padding = '0 16px';
+                    icon.style.transform = 'rotate(-90deg)';
+                }
+            });
+        }
+
+        // Search / filter rewards by access code
+        function filterRewards() {
+            const query = document.getElementById('reward-search').value.trim().toLowerCase();
+            document.querySelectorAll('.reward-card').forEach(card => {
+                const code = card.getAttribute('data-code').toLowerCase();
+                card.style.display = code.includes(query) ? 'block' : 'none';
+            });
         }
 
         // Initialize on page load
