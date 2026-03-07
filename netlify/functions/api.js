@@ -108,7 +108,7 @@ app.post('/api/session', asyncHandler(async (req, res) => {
     res.json(data);
 }));
 
-app.post('/api/session/complete-clue', validateSession, asyncHandler(async (req, res) => {
+app.post('/api/session/complete-clue', asyncHandler(async (req, res) => {
     const { access_code, clue_id, next_index } = req.body;
     const { data: session } = await supabase.from('game_sessions').select('*').eq('access_code', access_code).single();
     if (!session) return res.status(404).json({ error: 'Not found' });

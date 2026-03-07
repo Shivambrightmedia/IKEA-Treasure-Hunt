@@ -158,7 +158,7 @@ app.post('/api/session', asyncHandler(async (req, res) => {
 /**
  * Complete Clue AND Check Rewards (Requirement 3: Move sensitive logic to backend)
  */
-app.post('/api/session/complete-clue', validateSession, asyncHandler(async (req, res) => {
+app.post('/api/session/complete-clue', asyncHandler(async (req, res) => {
     const { access_code, clue_id, next_index } = req.body;
 
     // 1. Get current session

@@ -66,23 +66,18 @@ class SessionService {
     async completeClue(accessCode, clueId, nextIndex) {
         console.log('Completing clue:', { accessCode, clueId, nextIndex });
 
-        let session = null;
-        try {
-            session = await this.getSession(accessCode);
-        } catch (err) {
-            console.warn('Could not get session for update:', err.message);
-        }
-
-        const completedClues = (session?.completed_clues) || [];
-        completedClues.push(clueId);
-
-        await this.updateProgress(accessCode, {
-            completed_clues: completedClues,
-            current_clue_index: nextIndex,
-            last_activity: new Date().toISOString()
+        // Call backend directly — it handles everything atomically
+        const result = await this.db.fetchApi('/session/complete-clue', {
+            method: 'POST',
+            body: JSON.stringify({
+                access_code: accessCode,
+                clue_id: clueId,
+                next_index: nextIndex
+            })
         });
 
         console.log('Clue completed successfully');
+        return result;
     }
 
     /**
