@@ -146,9 +146,9 @@ class GameManager {
 
             this.player.loadFromSession(session);
 
-            // Start timer with remaining time
-            const remainingMs = this.sessionService.getRemainingTime(session);
-            this.timerManager.start(remainingMs);
+            // Start timer with expiry
+            this.startTimer(session.expires_at);
+            const remainingMs = this.timerManager.getRemainingMs();
 
             // Start auto-save heartbeat (update database every 60s)
             this._startAutoSync();
@@ -320,15 +320,6 @@ class GameManager {
             console.error('Complete clue error:', error);
             if (this.onError) this.onError('Failed to save progress. Please try again.');
         }
-    }
-
-    /**
-     * Generate a unique barcode for rewards
-     * @returns {string} Barcode string
-     */
-    generateBarcode() {
-        // Now handled on server
-        return 'REPLACED-ON-SERVER';
     }
 
     /**
