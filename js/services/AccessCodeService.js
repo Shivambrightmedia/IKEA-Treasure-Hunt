@@ -95,7 +95,10 @@ class AccessCodeService {
         return {
             valid: true,
             data: record,
+            user_name: record.user_name || 'Adventurer',
             isResume: isResume,
+            isCompleted: record.status === CONFIG.GAME_STATUS.COMPLETED,
+            isExpired: record.status === CONFIG.GAME_STATUS.EXPIRED,
             message: isResume ? 'Welcome back! Resuming your game...' : 'Code verified! Starting game...'
         };
     }

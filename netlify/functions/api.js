@@ -119,6 +119,7 @@ app.post('/api/validate-code', asyncHandler(async (req, res) => {
     res.json({
         ...record,
         valid: true,
+        user_name: record.user_name,
         isResume: record.status === 'active',
         isCompleted: record.status === 'completed',
         isExpired: record.status === 'expired'
@@ -221,11 +222,19 @@ app.get('/api/admin/stats', validateAdmin, asyncHandler(async (req, res) => {
 }));
 
 app.get('/api/admin/players', validateAdmin, asyncHandler(async (req, res) => {
-    const { data: codes } = await supabase.from('access_codes').select('code, status, created_at').order('created_at', { ascending: false }).limit(100);
+    const { data: codes } = await supabase.from('access_codes').select('code, status, created_at, user_name').order('created_at', { ascending: false }).limit(100);
     const { data: sessions } = await supabase.from('game_sessions').select('access_code, current_clue_index, rewards_earned, started_at, completed_at');
     const players = codes.map(code => {
         const session = sessions?.find(s => s.access_code === code.code);
-        return { code: code.code, status: code.status, cluesDone: session?.current_clue_index || 0, rewards: session?.rewards_earned?.length || 0, started: session?.started_at, completedAt: session?.completed_at };
+        return {
+            code: code.code,
+            status: code.status,
+            user_name: code.user_name || '-',
+            cluesDone: session?.current_clue_index || 0,
+            rewards: session?.rewards_earned?.length || 0,
+            started: session?.started_at,
+            completedAt: session?.completed_at
+        };
     });
     res.json(players);
 }));
@@ -238,8 +247,13 @@ app.get('/api/admin/rewards', validateAdmin, asyncHandler(async (req, res) => {
 }));
 
 app.post('/api/admin/create-code', validateAdmin, asyncHandler(async (req, res) => {
-    const { code } = req.body;
-    const { error } = await supabase.from('access_codes').insert([{ code, status: 'unused', created_at: new Date().toISOString() }]);
+    const { code, user_name } = req.body;
+    const { error } = await supabase.from('access_codes').insert([{
+        code,
+        user_name,
+        status: 'unused',
+        created_at: new Date().toISOString()
+    }]);
     if (error) return res.status(400).json({ error: error.message });
     res.json({ success: true });
 }));

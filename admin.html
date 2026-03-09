@@ -349,8 +349,13 @@
             <h2>🎟️ Code Management</h2>
             <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
                 <div style="flex: 1; min-width: 200px;">
-                    <label style="display: block; margin-bottom: 8px; color: #aaa; font-size: 14px;">Manually Add
-                        6-Digit Code</label>
+                    <label style="display: block; margin-bottom: 8px; color: #aaa; font-size: 14px;">User Name</label>
+                    <input type="text" id="manual-name" placeholder="e.g. John Doe"
+                        style="width: 100%; padding: 12px; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; background: rgba(255,255,255,0.05); color: white; font-size: 16px;">
+                </div>
+                <div style="flex: 1; min-width: 200px;">
+                    <label style="display: block; margin-bottom: 8px; color: #aaa; font-size: 14px;">6-Digit
+                        Code</label>
                     <input type="text" id="manual-code" placeholder="e.g. 123456" maxlength="6"
                         style="width: 100%; padding: 12px; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; background: rgba(255,255,255,0.05); color: white; font-size: 16px;">
                 </div>
@@ -368,6 +373,7 @@
                     <thead>
                         <tr>
                             <th>Access Code</th>
+                            <th>Name</th>
                             <th>Status</th>
                             <th>Clues Done</th>
                             <th>Rewards</th>
@@ -457,8 +463,10 @@
         // Create manual code
         window.createManualCode = async function () {
             const input = document.getElementById('manual-code');
+            const nameInput = document.getElementById('manual-name');
             const msgEl = document.getElementById('code-status-msg');
             const code = input.value.trim();
+            const user_name = nameInput.value.trim() || 'Anonymous';
 
             if (!code || code.length !== 6 || !/^\d+$/.test(code)) {
                 msgEl.textContent = '❌ Error: Enter a valid 6-digit number.';
@@ -470,13 +478,14 @@
             try {
                 await fetchAdmin('/create-code', {
                     method: 'POST',
-                    body: JSON.stringify({ code })
+                    body: JSON.stringify({ code, user_name })
                 });
 
                 msgEl.textContent = `✅ Success: Code ${code} added!`;
                 msgEl.style.color = '#28a745';
                 msgEl.style.display = 'block';
                 input.value = '';
+                nameInput.value = '';
                 refreshData();
                 setTimeout(() => { msgEl.style.display = 'none'; }, 5000);
             } catch (err) {
@@ -519,6 +528,7 @@
             tbody.innerHTML = players.map(p => `
                 <tr>
                     <td><strong>${p.code}</strong></td>
+                    <td style="color: #f1c40f;">${p.user_name}</td>
                     <td><span class="status-badge status-${p.status}">${p.status.toUpperCase()}</span></td>
                     <td>${p.cluesDone} / 3</td>
                     <td>🎁 ${p.rewards}</td>

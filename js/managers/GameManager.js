@@ -59,8 +59,9 @@ class GameManager {
     /**
      * Start a new game with validated access code
      * @param {string} accessCode - Validated access code
+     * @param {string} name - Player name
      */
-    async startNewGame(accessCode) {
+    async startNewGame(accessCode, name = 'Anonymous') {
         try {
             // Check if session ALREADY exists (edge case where code is UNUSED but session exists)
             let existingSession = null;
@@ -72,11 +73,11 @@ class GameManager {
             }
             if (existingSession) {
                 console.log('Session already exists, resuming instead of creating...');
-                return await this.resumeGame(accessCode);
+                return await this.resumeGame(accessCode, name);
             }
 
             // Create player
-            this.player = new Player(accessCode);
+            this.player = new Player(accessCode, name);
 
             // Assign clues for this session
             const assignedClueIds = this.cluePool.assignRandomClues();
@@ -112,11 +113,12 @@ class GameManager {
     /**
      * Resume existing game
      * @param {string} accessCode - Access code
+     * @param {string} name - Player name
      */
-    async resumeGame(accessCode) {
+    async resumeGame(accessCode, name = 'Anonymous') {
         try {
             // Create player
-            this.player = new Player(accessCode);
+            this.player = new Player(accessCode, name);
 
             // Get existing session
             let session = null;
@@ -166,7 +168,7 @@ class GameManager {
             console.error('Resume game error:', error);
             try {
                 console.log('Attempting to start new game as fallback...');
-                await this.startNewGame(accessCode);
+                await this.startNewGame(accessCode, name);
             } catch (fallbackError) {
                 console.error('Fallback also failed:', fallbackError);
                 if (this.onError) this.onError('Failed to start game. Please try again.');
@@ -178,13 +180,14 @@ class GameManager {
      * Show end screen for a completed or expired game
      * @param {string} accessCode - Access code
      * @param {string} reason - 'completed' or 'expired'
+     * @param {string} name - Player name
      */
-    async showEndResults(accessCode, reason) {
+    async showEndResults(accessCode, reason, name = 'Anonymous') {
         try {
             console.log(`Displaying ${reason} results for:`, accessCode);
 
             // Create player
-            this.player = new Player(accessCode);
+            this.player = new Player(accessCode, name);
 
             // Get existing session
             const session = await this.sessionService.getSession(accessCode);

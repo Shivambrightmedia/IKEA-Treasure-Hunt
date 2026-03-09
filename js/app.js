@@ -158,14 +158,16 @@ async function handleStartClick() {
         statusEl.textContent = result.message;
 
         // Start/resume logic
+        const playerName = result.user_name || 'Adventurer';
+
         if (result.isCompleted) {
-            await gameManager.showEndResults(code, 'completed');
+            await gameManager.showEndResults(code, 'completed', playerName);
         } else if (result.isExpired) {
-            await gameManager.showEndResults(code, 'expired');
+            await gameManager.showEndResults(code, 'expired', playerName);
         } else if (result.isResume) {
-            await gameManager.resumeGame(code);
+            await gameManager.resumeGame(code, playerName);
         } else {
-            await gameManager.startNewGame(code);
+            await gameManager.startNewGame(code, playerName);
         }
     } catch (error) {
         console.error('Mobile Connection Error:', error);
@@ -305,7 +307,7 @@ function showEndScreen(reason, dashboard) {
         const messageEl = rewardScreen.querySelector('p');
 
         if (reason === 'completed') {
-            if (titleEl) titleEl.textContent = 'Congratulations!';
+            if (titleEl) titleEl.textContent = `Congratulations, ${dashboard.userName || 'Adventurer'}!`;
             if (messageEl) {
                 messageEl.innerHTML = `You have found all the treasures!<br>
                     <span style="font-size:0.9em; color:var(--ikea-blue); font-weight:bold;">
@@ -313,7 +315,7 @@ function showEndScreen(reason, dashboard) {
                     </span>`;
             }
         } else {
-            if (titleEl) titleEl.textContent = 'Time\'s Up!';
+            if (titleEl) titleEl.textContent = `${dashboard.userName || 'Adventurer'}, Time's Up!`;
             if (messageEl) messageEl.textContent = `You found ${dashboard.progress} of ${dashboard.totalClues} clues.`;
         }
 

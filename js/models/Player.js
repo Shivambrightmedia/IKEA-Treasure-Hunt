@@ -4,8 +4,9 @@
  */
 
 class Player {
-    constructor(accessCode) {
+    constructor(accessCode, name = 'Anonymous') {
         this.accessCode = accessCode;
+        this.name = name;
         this.session = null;
         this.isNewPlayer = true;
     }
@@ -91,6 +92,7 @@ class Player {
 
         return {
             accessCode: this.accessCode,
+            userName: this.name,
             progress: this.getCompletedClues().length,
             totalClues: this.getAssignedClues().length,
             progressPercentage: this.getProgressPercentage(),
