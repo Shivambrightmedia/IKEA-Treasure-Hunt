@@ -131,9 +131,6 @@ async function handleStartClick() {
         return;
     }
 
-    // MOBILE OPTIMIZATION: Trigger AR startup immediately on the click gesture
-    initAR();
-
     statusEl.textContent = 'Validating code...';
 
     try {
@@ -153,6 +150,9 @@ async function handleStartClick() {
             statusEl.textContent = 'Enter your code';
             return;
         }
+
+        // START AR ONLY AFTER VALIDATION (User request)
+        initAR();
 
         // Show message
         statusEl.textContent = result.message;
