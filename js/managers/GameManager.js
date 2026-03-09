@@ -49,11 +49,10 @@ class GameManager {
      */
     async validateCode(code) {
         try {
-            const result = await this.accessCodeService.validate(code);
-            return result;
+            return await this.accessCodeService.validate(code);
         } catch (error) {
             console.error('Validation error:', error);
-            return { valid: false, error: 'Connection error. Please try again.' };
+            return { valid: false, error: error.message || 'Connection error. Please try again.' };
         }
     }
 
@@ -136,7 +135,8 @@ class GameManager {
 
             // RECALCULATE EXPIRY: Resume from where they left off
             // New expiry = Current Time + Remaining Seconds from database
-            const newExpiry = new Date(Date.now() + (session.remaining_seconds * 1000));
+            const remainingSecs = session.remaining_seconds || (CONFIG.GAME_DURATION_MINUTES * 60);
+            const newExpiry = new Date(Date.now() + (remainingSecs * 1000));
             session.expires_at = newExpiry.toISOString();
 
             // Sync this new expiry back to database so it stays consistent
@@ -147,9 +147,10 @@ class GameManager {
             this.player.loadFromSession(session);
 
             // Start timer with remaining time
-            this.startTimer(session.expires_at);
+            const remainingMs = this.sessionService.getRemainingTime(session);
+            this.timerManager.start(remainingMs);
 
-            // Start auto-save heartbeat (update database every 10s)
+            // Start auto-save heartbeat (update database every 60s)
             this._startAutoSync();
 
             // Load current clue
@@ -157,7 +158,7 @@ class GameManager {
 
             // Notify UI
             if (this.onStateChange) {
-                this.onStateChange('playing', this.player.getDashboard(this.timerManager.getRemainingMs()));
+                this.onStateChange('playing', this.player.getDashboard(remainingMs));
             }
 
             console.log('Game resumed:', accessCode);

@@ -58,6 +58,9 @@ class TimerManager {
     tick() {
         const remaining = this.getRemainingMs();
 
+        // Round to nearest second to avoid millisecond drift display glitch
+        const displayMs = Math.ceil(remaining / 1000) * 1000;
+
         if (remaining <= 0) {
             this.stop();
             this.onExpire();
@@ -73,7 +76,7 @@ class TimerManager {
 
         // Call tick callback with formatted time
         if (this.onTick) {
-            this.onTick(this.formatTime(remaining), remaining);
+            this.onTick(this.formatTime(displayMs), remaining);
         }
     }
 

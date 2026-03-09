@@ -65,7 +65,8 @@ class AccessCodeService {
         const record = await this.db.selectOne(this.tableName, { code });
 
         if (!record) {
-            return { valid: false, error: 'Code not found. Please check and try again.' };
+            // Throw the generic or backend error (if passed through as a property)
+            throw new Error(record?.error || 'Code not found. Please check and try again.');
         }
 
         if (record.status === CONFIG.GAME_STATUS.COMPLETED) {
