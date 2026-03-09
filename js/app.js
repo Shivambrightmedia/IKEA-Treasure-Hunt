@@ -115,10 +115,16 @@ function initUI() {
     }
 }
 
+// Brute force lockout timer
+let lockoutTimer = null;
+
 async function handleStartClick() {
     const codeInput = document.getElementById('accessCodeInput');
+    const startBtn = document.getElementById('startBtn');
     const code = codeInput.value.trim();
     const statusEl = document.getElementById('ar-status');
+
+    if (lockoutTimer) return; // Prevent clicking while locked out
 
     if (!code || code.length !== 6) {
         showInlineError('❌ Please enter a 6-digit code');
@@ -126,17 +132,24 @@ async function handleStartClick() {
     }
 
     // MOBILE OPTIMIZATION: Trigger AR startup immediately on the click gesture
-    // Many mobile browsers block the camera if it's called after an async delay
     initAR();
 
     statusEl.textContent = 'Validating code...';
 
     try {
-        // Validate code
         const result = await gameManager.validateCode(code);
 
         if (!result.valid) {
-            showInlineError('❌ Your code is incorrect');
+            const errorMsg = result.error || '❌ Your code is incorrect';
+
+            // Check if we are rate limited
+            if (errorMsg.includes('wait') && errorMsg.includes('seconds')) {
+                const seconds = parseInt(errorMsg.match(/\d+/)[0]);
+                startLockoutCountdown(seconds);
+            } else {
+                showInlineError(errorMsg);
+            }
+
             statusEl.textContent = 'Enter your code';
             return;
         }
@@ -144,7 +157,7 @@ async function handleStartClick() {
         // Show message
         statusEl.textContent = result.message;
 
-        // Start, resume, or show results for ended games
+        // Start/resume logic
         if (result.isCompleted) {
             await gameManager.showEndResults(code, 'completed');
         } else if (result.isExpired) {
@@ -158,6 +171,46 @@ async function handleStartClick() {
         console.error('Mobile Connection Error:', error);
         showInlineError('⚠️ Network Error: Check your internet/VPN');
     }
+}
+
+/**
+ * Visual countdown for rate limiting
+ * @param {number} seconds - Wait time
+ */
+function startLockoutCountdown(seconds) {
+    if (lockoutTimer) clearInterval(lockoutTimer);
+
+    const errorEl = document.getElementById('codeErrorMsg');
+    const startBtn = document.getElementById('startBtn');
+    const codeInput = document.getElementById('accessCodeInput');
+
+    let remaining = seconds;
+
+    // UI Feedback
+    startBtn.disabled = true;
+    startBtn.style.opacity = '0.5';
+    startBtn.style.cursor = 'not-allowed';
+    codeInput.classList.add('input-error');
+
+    function updateTimer() {
+        if (remaining <= 0) {
+            clearInterval(lockoutTimer);
+            lockoutTimer = null;
+            errorEl.classList.remove('visible');
+            startBtn.disabled = false;
+            startBtn.style.opacity = '1';
+            startBtn.style.cursor = 'pointer';
+            codeInput.classList.remove('input-error');
+            return;
+        }
+
+        errorEl.textContent = `🚫 Too many attempts. Try again in ${remaining}s`;
+        errorEl.classList.add('visible');
+        remaining--;
+    }
+
+    updateTimer();
+    lockoutTimer = setInterval(updateTimer, 1000);
 }
 
 function showGameScreen() {
@@ -318,8 +371,10 @@ function showInlineError(message) {
         statusEl.textContent = 'Enter your code';
     }
 
-    // Hide error after 3 seconds
+    // Hide error after 3 seconds, UNLESS we are in a lockout countdown
     setTimeout(() => {
+        if (lockoutTimer) return; // The countdown function will handle cleanup
+
         if (errorMsg) errorMsg.classList.remove('visible');
         if (codeInput) codeInput.classList.remove('input-error');
     }, 3000);
