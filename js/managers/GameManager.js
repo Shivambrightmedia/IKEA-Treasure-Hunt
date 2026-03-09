@@ -433,7 +433,7 @@ class GameManager {
             } catch (err) {
                 console.warn('Silent sync failed:', err.message);
             }
-        }, 10000); // Every 10 seconds
+        }, 60000); // Every 60 seconds
     }
 
     /**
