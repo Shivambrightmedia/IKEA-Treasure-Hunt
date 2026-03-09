@@ -62,23 +62,60 @@ const validateAdmin = (req, res, next) => {
 
 app.post('/api/validate-code', asyncHandler(async (req, res) => {
     const { code } = req.body;
+    const clientIp = req.headers['x-nf-client-connection-ip'] || req.ip || 'unknown';
 
     if (!code || code.length !== 6 || !/^\d+$/.test(code)) {
         return res.status(400).json({ error: 'Invalid code format. Enter 6 digits.' });
     }
 
+    // 1. Check for existing rate limit
+    const { data: attemptData } = await supabase
+        .from('login_attempts')
+        .select('*')
+        .eq('ip', clientIp)
+        .maybeSingle();
+
+    if (attemptData && attemptData.attempts >= 5) {
+        const lastAttempt = new Date(attemptData.last_attempt);
+        const now = new Date();
+        const secondsPassed = (now - lastAttempt) / 1000;
+
+        if (secondsPassed < 120) {
+            const waitTime = Math.ceil(120 - secondsPassed);
+            return res.status(429).json({
+                error: `Too many wrong attempts. Please wait ${waitTime} seconds.`
+            });
+        }
+    }
+
+    // 2. Try to validate code
     const { data: record, error } = await supabase
         .from('access_codes')
         .select('*')
         .eq('code', code)
-        .single();
+        .maybeSingle();
 
     if (error || !record) {
-        return res.status(404).json({ error: 'Code not found. Please check and try again.' });
+        // Increment failed attempts
+        const newAttempts = (attemptData?.attempts || 0) + 1;
+        await supabase
+            .from('login_attempts')
+            .upsert({
+                ip: clientIp,
+                attempts: newAttempts,
+                last_attempt: new Date().toISOString()
+            });
+
+        return res.status(404).json({
+            error: `Code not found. ${5 - newAttempts > 0 ? (5 - newAttempts) + ' attempts remaining.' : 'Account locked for 2 mins.'}`
+        });
     }
 
-    // Return the record directly (AccessCodeService expects this shape)
-    // Include status fields at top level for frontend compatibility
+    // 3. Success: Reset failed attempts for this IP
+    if (attemptData) {
+        await supabase.from('login_attempts').delete().eq('ip', clientIp);
+    }
+
     res.json({
         ...record,
         valid: true,
