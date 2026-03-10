@@ -70,21 +70,29 @@ let currentARFile = 'targets.mind';
 function updateARSource(fileName) {
     if (currentARFile === fileName) return;
 
-    console.log(`Switching AR source to: ${fileName}`);
+    console.log(`[AR-Switch] Switching target to: ${fileName}`);
     const scene = document.querySelector('a-scene');
     if (scene) {
         const arSystem = scene.systems['mindar-image-system'];
 
-        // Update the attribute
-        scene.setAttribute('mindar-image', `imageTargetSrc: ${fileName}; autoStart: false; uiScanning: yes; uiLoading: yes;`);
-
-        // Restart system if already running
-        if (arSystem && arSystem.mainLoop) {
+        // 1. Clear current state
+        if (arSystem) {
             arSystem.stop();
-            arSystem.start();
         }
 
-        currentARFile = fileName;
+        // 2. Update the source file
+        scene.setAttribute('mindar-image', `imageTargetSrc: ${fileName}; autoStart: false; uiScanning: yes; uiLoading: yes;`);
+
+        // 3. Re-initialize and Re-start
+        setTimeout(() => {
+            const newArSystem = scene.systems['mindar-image-system'];
+            if (newArSystem) {
+                console.log(`[AR-Switch] Re-starting system with ${fileName}`);
+                // In MindAR 1.2+ we can use start() again after stop()
+                newArSystem.start();
+                currentARFile = fileName;
+            }
+        }, 500);
     }
 }
 

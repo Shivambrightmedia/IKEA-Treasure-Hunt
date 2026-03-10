@@ -75,7 +75,15 @@ class CluePool {
      * @returns {Array<string>} Array of clue IDs
      */
     assignRandomClues(count = CONFIG.TOTAL_CLUES_PER_SESSION) {
-        const shuffled = [...this.masterPool].sort(() => 0.5 - Math.random());
-        return shuffled.slice(0, Math.min(count, shuffled.length)).map(clue => clue.id);
+        // Separate fixed clues and random pool
+        const fixedLast = this.masterPool.find(c => c.id === 'clue_4');
+        const others = this.masterPool.filter(c => c.id !== 'clue_4');
+
+        // Shuffle the others
+        const shuffled = [...others].sort(() => 0.5 - Math.random());
+
+        // Combine (others first, clue_4 last)
+        const result = [...shuffled, fixedLast].filter(Boolean);
+        return result.slice(0, count).map(clue => clue.id);
     }
 }
