@@ -415,11 +415,19 @@ function updateToggleIcon() {
 // ==================== AR FUNCTIONS ====================
 
 function initAR() {
+    const statusEl = document.getElementById('ar-status');
+    if (statusEl) statusEl.textContent = 'Downloading AR Data (13MB)...';
+
     const scene = document.querySelector('a-scene');
     if (scene) {
         const arSystem = scene.systems['mindar-image-system'];
         scene.addEventListener('arReady', () => {
             console.log('AR Ready');
+            if (statusEl) statusEl.textContent = 'Hunting...';
+        });
+        scene.addEventListener('arError', (event) => {
+            console.error('AR Error', event);
+            if (statusEl) statusEl.textContent = '❌ AR Error: Refresh page';
         });
         if (arSystem) arSystem.start();
     }
