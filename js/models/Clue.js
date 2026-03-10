@@ -34,13 +34,17 @@ class Clue {
  */
 class CluePool {
     constructor() {
-        // Master pool of clues (now 4)
-        this.masterPool = [
-            new Clue('clue_1', 0, "Find the 'Active Blend' green packet!", "HINT: It's an energy booster.", "Health Zone"),
-            new Clue('clue_2', 1, "Look for the black Billabong Cap.", "HINT: It's a headwear accessory.", "Accessories"),
-            new Clue('clue_3', 2, "Can you find this man's portrait?", "HINT: Look for a display of photographs.", "Gallery"),
-            new Clue('clue_4', 3, "Final Step: Find the scenic Coastline view!", "HINT: It's a beautiful landscape photo.", "Art Zone")
-        ];
+        // Master pool of clues (40 items)
+        this.masterPool = Array.from({ length: 40 }, (_, i) => {
+            const index = i;
+            return new Clue(
+                `clue_${index + 1}`,
+                index,
+                `Hunt Item #${index + 1}: Find Target ${index}`,
+                `HINT: Find the item mapped at target index ${index}.`,
+                "Hunt Zone"
+            );
+        });
     }
 
     /**
@@ -70,20 +74,12 @@ class CluePool {
     }
 
     /**
-     * Assign random clues for a session
+     * Assign clues for a session
      * @param {number} count - Number of clues to assign
      * @returns {Array<string>} Array of clue IDs
      */
     assignRandomClues(count = CONFIG.TOTAL_CLUES_PER_SESSION) {
-        // Separate fixed clues and random pool
-        const fixedLast = this.masterPool.find(c => c.id === 'clue_4');
-        const others = this.masterPool.filter(c => c.id !== 'clue_4');
-
-        // Shuffle the others
-        const shuffled = [...others].sort(() => 0.5 - Math.random());
-
-        // Combine (others first, clue_4 last)
-        const result = [...shuffled, fixedLast].filter(Boolean);
-        return result.slice(0, count).map(clue => clue.id);
+        // NO SHUFFLING for testing: Just return the masterPool in order
+        return this.masterPool.slice(0, count).map(clue => clue.id);
     }
 }
