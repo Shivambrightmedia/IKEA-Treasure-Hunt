@@ -129,6 +129,21 @@ function initUI() {
     if (cpToggleIcon) {
         cpToggleIcon.addEventListener('click', togglePanelState);
     }
+
+    // Side Menu Controls
+    const menuBtn = document.getElementById('menu-btn');
+    const closeMenuBtn = document.getElementById('close-menu');
+    const menuOverlay = document.getElementById('side-menu-overlay');
+
+    if (menuBtn) {
+        menuBtn.addEventListener('click', toggleSideMenu);
+    }
+    if (closeMenuBtn) {
+        closeMenuBtn.addEventListener('click', toggleSideMenu);
+    }
+    if (menuOverlay) {
+        menuOverlay.addEventListener('click', toggleSideMenu);
+    }
 }
 
 // Brute force lockout timer
@@ -240,6 +255,10 @@ function showGameScreen() {
     const timerDisplay = document.getElementById('timer-display');
     if (timerDisplay) timerDisplay.style.display = 'block';
 
+    // Show hamburger menu
+    const menuBtn = document.getElementById('menu-btn');
+    if (menuBtn) menuBtn.style.display = 'flex';
+
     document.getElementById('ar-status').textContent = 'Hunting...';
 }
 
@@ -251,6 +270,25 @@ function updateDashboard(dashboard) {
     const progressEl = document.getElementById('progress-display');
     if (progressEl) {
         progressEl.textContent = `${dashboard.progress}/${dashboard.totalClues} clues`;
+    }
+
+    // Update Side Menu content
+    const menuName = document.getElementById('menu-player-name');
+    const menuRewards = document.getElementById('menu-reward-list');
+
+    if (menuName) menuName.textContent = dashboard.userName || 'Adventurer';
+
+    if (menuRewards && dashboard.rewards) {
+        if (dashboard.rewards.length === 0) {
+            menuRewards.innerHTML = '<p style="color: #999; font-style: italic; font-size: 0.9em;">No rewards found yet. Keep hunting!</p>';
+        } else {
+            menuRewards.innerHTML = dashboard.rewards.map(r => `
+                <div class="menu-reward-item">
+                    <span class="reward-type">${r.type === 'final' ? '🏆 FINAL REWARD' : '🎁 MILESTONE reward'}</span>
+                    <span class="reward-barcode">${r.barcode}</span>
+                </div>
+            `).join('');
+        }
     }
 }
 
@@ -409,6 +447,15 @@ function updateToggleIcon() {
     const cpToggleIcon = document.getElementById('cp-toggle-icon');
     if (cluePanel && cpToggleIcon) {
         cpToggleIcon.textContent = cluePanel.classList.contains('collapsed') ? '▲' : '▼';
+    }
+}
+
+function toggleSideMenu() {
+    const menu = document.getElementById('side-menu');
+    const overlay = document.getElementById('side-menu-overlay');
+    if (menu && overlay) {
+        menu.classList.toggle('open');
+        overlay.classList.toggle('visible');
     }
 }
 

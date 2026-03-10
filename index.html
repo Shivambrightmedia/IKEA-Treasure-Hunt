@@ -408,7 +408,143 @@
             font-weight: bold;
             color: #333;
         }
+
+        /* Hamburger Menu Button */
+        #menu-btn {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 3000;
+            background: var(--ikea-blue);
+            color: white;
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            font-size: 24px;
+            display: none;
+            /* Hidden until game starts */
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s;
+        }
+
+        #menu-btn:active {
+            transform: scale(0.9);
+        }
+
+        /* Side Menu Drawer */
+        #side-menu {
+            position: fixed;
+            top: 0;
+            left: -300px;
+            /* Initially hidden */
+            width: 280px;
+            height: 100%;
+            background: white;
+            z-index: 4000;
+            box-shadow: 5px 0 25px rgba(0, 0, 0, 0.2);
+            transition: left 0.3s ease;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #side-menu.open {
+            left: 0;
+        }
+
+        #side-menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 3500;
+            display: none;
+            backdrop-filter: blur(2px);
+        }
+
+        #side-menu-overlay.visible {
+            display: block;
+        }
+
+        .menu-header {
+            border-bottom: 2px solid var(--ikea-blue);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .menu-title {
+            color: var(--ikea-blue);
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .menu-player-name {
+            color: #333;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+
+        .reward-list-title {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        #menu-reward-list {
+            list-style: none;
+            padding: 0;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .menu-reward-item {
+            background: #f8f8f8;
+            border: 1px solid #eee;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .reward-type {
+            font-weight: bold;
+            color: var(--ikea-blue);
+            font-size: 0.85em;
+        }
+
+        .reward-barcode {
+            font-family: monospace;
+            font-size: 1em;
+            color: #333;
+            background: #eee;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .close-menu-btn {
+            background: #eee;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: auto;
+            cursor: pointer;
+            font-weight: bold;
+            color: #333;
+        }
     </style>
+
 </head>
 
 <body>
@@ -438,8 +574,27 @@
         45:00
     </div>
 
-    <!-- Status Indicator -->
-    <div id="ar-status">Enter your code <span id="debug-file"
+    <!-- Hamburger Menu Button -->
+    <button id="menu-btn">☰</button>
+
+    <!-- Side Menu -->
+    <div id="side-menu-overlay"></div>
+    <div id="side-menu">
+        <div class="menu-header">
+            <div class="menu-title">Explorer Profile</div>
+            <div id="menu-player-name" class="menu-player-name">Adventurer</div>
+        </div>
+
+        <div class="reward-list-title">My Rewards</div>
+        <div id="menu-reward-list">
+            <p style="color: #999; font-style: italic; font-size: 0.9em;">No rewards found yet. Keep hunting!</p>
+        </div>
+
+        <button class="close-menu-btn" id="close-menu">Close Menu</button>
+    </div>
+
+    <!-- Status Indicator (Moved down slightly to not cover burger) -->
+    <div id="ar-status" style="top: 70px;">Enter your code <span id="debug-file"
             style="font-size: 0.7em; opacity: 0.5; margin-left: 5px;"></span></div>
 
     <!-- Success Pop-up -->
