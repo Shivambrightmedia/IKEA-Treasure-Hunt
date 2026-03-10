@@ -70,20 +70,32 @@ let currentARFile = 'targets.mind';
 function updateARSource(fileName) {
     if (currentARFile === fileName) return;
 
-    console.log(`[AR-Switch] Switching target to: ${fileName}`);
-    const scene = document.querySelector('a-scene');
-    if (scene) {
-        console.log(`[AR-Switch] Nuclear reset: Reloading with ${fileName}`);
+    // Update visual debugger
+    const debugEl = document.getElementById('debug-file');
+    if (debugEl) debugEl.textContent = `(${fileName})`;
 
-        // 1. Completely remove the attribute to kill the current system
+    console.log(`[AR-Switch] Nuclear reset: Reloading with ${fileName}`);
+    const scene = document.querySelector('a-scene');
+
+    if (scene) {
+        // 1. Force stop and remove
+        const arSystem = scene.systems['mindar-image-system'];
+        if (arSystem) arSystem.stop();
         scene.removeAttribute('mindar-image');
 
-        // 2. Wait for the browser to clear memory, then re-inject the new source
+        // 2. Wait 1.5s for the browser to clear the heavy .mind file from memory
         setTimeout(() => {
-            scene.setAttribute('mindar-image', `imageTargetSrc: ${fileName}; autoStart: true; uiScanning: yes; uiLoading: yes;`);
             currentARFile = fileName;
-            console.log(`[AR-Switch] System re-injected with ${fileName}`);
-        }, 1000); // 1 second pause ensures a fresh start
+            scene.setAttribute('mindar-image', `imageTargetSrc: ${fileName}; autoStart: true; uiScanning: yes; uiLoading: yes;`);
+
+            // 3. Final kickstart for some mobile browsers
+            setTimeout(() => {
+                const updatedArSystem = scene.systems['mindar-image-system'];
+                if (updatedArSystem && !updatedArSystem.mainLoop) {
+                    updatedArSystem.start();
+                }
+            }, 500);
+        }, 1500);
     }
 }
 
