@@ -68,47 +68,9 @@ function handleClueChange(clue, currentNum, totalNum) {
  */
 let currentARFile = 'targets.mind';
 function updateARSource(fileName) {
-    if (currentARFile === fileName) return;
-
-    // Update visual debugger
-    const debugEl = document.getElementById('debug-file');
-    if (debugEl) debugEl.textContent = `(${fileName})`;
-
-    // CACHE BUSTER: Add a timestamp to force the browser to actually download the new file
-    const cacheBuster = `?v=${Date.now()}`;
-    const fileWithBuster = fileName + cacheBuster;
-
-    console.log(`[AR-Switch] Hot-swapping to: ${fileWithBuster}`);
-    const scene = document.querySelector('a-scene');
-
-    if (scene) {
-        const arSystem = scene.systems['mindar-image-system'];
-
-        // 1. Update the attribute (this tells MindAR what to load)
-        scene.setAttribute('mindar-image', `imageTargetSrc: ${fileWithBuster}; autoStart: true; uiScanning: yes; uiLoading: yes;`);
-
-        // 2. Smooth Reset: Restart just the tracking engine, not the camera
-        if (arSystem) {
-            // We stop the tracking loop but the video element stays alive in the DOM
-            if (arSystem.mainLoop) {
-                cancelAnimationFrame(arSystem.mainLoop);
-                arSystem.mainLoop = null;
-            }
-
-            // Give the browser 500ms to register the attribute change before re-init
-            setTimeout(() => {
-                arSystem.init().then(() => {
-                    arSystem.start();
-                    currentARFile = fileName;
-                    console.log(`[AR-Switch] Hot-swap successful: ${fileName}`);
-                }).catch(err => {
-                    console.error("[AR-Switch] Hot-swap failed, trying full restart:", err);
-                    arSystem.stop();
-                    arSystem.start();
-                });
-            }, 500);
-        }
-    }
+    // We now use a single targets.mind for all 4 targets.
+    // This keeps the camera running smoothly without interruptions.
+    console.log("AR Scanner active with universal target file.");
 }
 
 function handleTimerUpdate(formattedTime, remainingMs) {

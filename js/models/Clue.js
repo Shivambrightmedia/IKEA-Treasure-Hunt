@@ -36,10 +36,10 @@ class CluePool {
     constructor() {
         // Master pool of clues (now 4)
         this.masterPool = [
-            new Clue('clue_1', 0, "Find a lamp shaped like a Cloud", "HINT: It's available in the living area.", "Living Room", "targets.mind"),
-            new Clue('clue_2', 1, "What rises in the east, sets in the west, and is also a lamp :)", "HINT: It's in the bedroom area.", "Bedroom", "targets.mind"),
-            new Clue('clue_3', 2, "It's fork, It's a spoon, It's both!", "HINT: It's in the kitchen area.", "Kitchen", "targets.mind"),
-            new Clue('clue_4', 0, "Mission Accomplished? Find the Astronaut to finish your hunt!", "HINT: Look for the space-themed display.", "Space Zone", "targets1.mind")
+            new Clue('clue_1', 0, "Find the 'Active Blend' green packet!", "HINT: It's an energy booster.", "Health Zone"),
+            new Clue('clue_2', 1, "Look for the black Billabong Cap.", "HINT: It's a headwear accessory.", "Accessories"),
+            new Clue('clue_3', 2, "Can you find this man's portrait?", "HINT: Look for a display of photographs.", "Gallery"),
+            new Clue('clue_4', 3, "Final Step: Find the scenic Coastline view!", "HINT: It's a beautiful landscape photo.", "Art Zone")
         ];
     }
 
