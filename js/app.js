@@ -55,6 +55,37 @@ function handleStateChange(state, dashboard) {
 function handleClueChange(clue, currentNum, totalNum) {
     console.log('Clue changed:', clue);
     updateCluePanel(clue, currentNum, totalNum);
+
+    // Switch AR targets if needed
+    if (clue.targetFile) {
+        updateARSource(clue.targetFile);
+    }
+}
+
+/**
+ * Updates the AR scene's target source dynamically
+ * @param {string} fileName - The .mind file to load
+ */
+let currentARFile = 'targets.mind';
+function updateARSource(fileName) {
+    if (currentARFile === fileName) return;
+
+    console.log(`Switching AR source to: ${fileName}`);
+    const scene = document.querySelector('a-scene');
+    if (scene) {
+        const arSystem = scene.systems['mindar-image-system'];
+
+        // Update the attribute
+        scene.setAttribute('mindar-image', `imageTargetSrc: ${fileName}; autoStart: false; uiScanning: yes; uiLoading: yes;`);
+
+        // Restart system if already running
+        if (arSystem && arSystem.mainLoop) {
+            arSystem.stop();
+            arSystem.start();
+        }
+
+        currentARFile = fileName;
+    }
 }
 
 function handleTimerUpdate(formattedTime, remainingMs) {

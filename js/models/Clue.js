@@ -3,12 +3,13 @@
  */
 
 class Clue {
-    constructor(id, targetIndex, text, hint, zone = 'Unknown Zone') {
+    constructor(id, targetIndex, text, hint, zone = 'Unknown Zone', targetFile = 'targets.mind') {
         this.id = id;
         this.targetIndex = targetIndex;
         this.text = text;
         this.hint = hint;
         this.zone = zone;
+        this.targetFile = targetFile;
     }
 
     /**
@@ -22,7 +23,8 @@ class Clue {
             data.targetIndex,
             data.text,
             data.hint,
-            data.zone
+            data.zone,
+            data.targetFile || 'targets.mind'
         );
     }
 }
@@ -32,11 +34,12 @@ class Clue {
  */
 class CluePool {
     constructor() {
-        // Master pool of clues (currently 3 for pilot)
+        // Master pool of clues (now 4)
         this.masterPool = [
-            new Clue('clue_1', 0, "Find a lamp shaped like a Cloud", "HINT: It's available in the living area.", "Living Room"),
-            new Clue('clue_2', 1, "What rises in the east, sets in the west, and is also a lamp :)", "HINT: It's in the bedroom area.", "Bedroom"),
-            new Clue('clue_3', 2, "It's fork, It's a spoon, It's both!", "HINT: It's in the kitchen area.", "Kitchen")
+            new Clue('clue_1', 0, "Find a lamp shaped like a Cloud", "HINT: It's available in the living area.", "Living Room", "targets.mind"),
+            new Clue('clue_2', 1, "What rises in the east, sets in the west, and is also a lamp :)", "HINT: It's in the bedroom area.", "Bedroom", "targets.mind"),
+            new Clue('clue_3', 2, "It's fork, It's a spoon, It's both!", "HINT: It's in the kitchen area.", "Kitchen", "targets.mind"),
+            new Clue('clue_4', 0, "One last check! Can you find the giant IKEA Blue Bag?", "HINT: It's near the checkout counters.", "Checkout", "targets1.mind")
         ];
     }
 

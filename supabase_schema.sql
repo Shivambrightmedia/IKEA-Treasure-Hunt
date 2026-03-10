@@ -65,7 +65,8 @@ CREATE TABLE IF NOT EXISTS clues (
 INSERT INTO clues (id, target_index, zone, text, hint) VALUES
     ('clue_1', 0, 'Living Room', 'Find a lamp shaped like a Cloud', 'HINT: It''s available in the living area.'),
     ('clue_2', 1, 'Bedroom', 'What rises in the east, sets in the west, and is also a lamp :)', 'HINT: It''s in the bedroom area.'),
-    ('clue_3', 2, 'Kitchen', 'It''s fork, It''s a spoon, It''s both!', 'HINT: It''s in the kitchen area.')
+    ('clue_3', 2, 'Kitchen', 'It''s fork, It''s a spoon, It''s both!', 'HINT: It''s in the kitchen area.'),
+    ('clue_4', 0, 'Checkout', 'One last check! Can you find the giant IKEA Blue Bag?', 'HINT: It''s near the checkout counters.')
 ON CONFLICT (id) DO NOTHING;
 
 -- =====================================================
