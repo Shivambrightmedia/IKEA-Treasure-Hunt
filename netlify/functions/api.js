@@ -153,33 +153,31 @@ app.post('/api/session/complete-clue', asyncHandler(async (req, res) => {
         return res.status(400).json({ error: 'Missing required fields', received: { access_code, clue_id, next_index } });
     }
 
-    // 1. Get session (use maybeSingle to avoid throw on no rows)
     const { data: session, error: fetchErr } = await supabase
         .from('game_sessions')
         .select('*')
         .eq('access_code', access_code)
         .maybeSingle();
 
-    if (fetchErr) {
-        console.error('Fetch session error:', fetchErr);
-        return res.status(500).json({ error: 'Database read failed', detail: fetchErr.message });
-    }
-    if (!session) {
-        return res.status(404).json({ error: 'Session not found for code: ' + access_code });
-    }
+    if (fetchErr) return res.status(500).json({ error: 'Database read failed' });
+    if (!session) return res.status(404).json({ error: 'Session not found' });
 
-    // 2. Build updates
     const completedClues = [...(session.completed_clues || []), clue_id];
     const rewards = [...(session.rewards_earned || [])];
-    const milestones = [1, 2, 3];
     const rewardId = `reward_${completedClues.length}`;
 
-    if (milestones.includes(completedClues.length) && !rewards.some(r => r.id === rewardId)) {
-        const barcode = `IKEA-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-        rewards.push({ id: rewardId, milestone: completedClues.length, barcode, unlocked_at: new Date().toISOString(), redeemed: false, type: completedClues.length === 3 ? 'final' : 'milestone' });
+    // Milestone reward logic
+    if ([1, 10, 20, 30, 40].includes(completedClues.length) && !rewards.some(r => r.id === rewardId)) {
+        const barcode = `IKEA-${Date.now().toString(36).toUpperCase()}`;
+        rewards.push({
+            id: rewardId,
+            milestone: completedClues.length,
+            barcode,
+            unlocked_at: new Date().toISOString(),
+            type: completedClues.length === 40 ? 'final' : 'milestone'
+        });
     }
 
-    // 3. Update
     const { data: updated, error: updateErr } = await supabase
         .from('game_sessions')
         .update({
@@ -192,12 +190,24 @@ app.post('/api/session/complete-clue', asyncHandler(async (req, res) => {
         .select()
         .maybeSingle();
 
-    if (updateErr) {
-        console.error('Update session error:', updateErr);
-        return res.status(500).json({ error: 'Database update failed', detail: updateErr.message });
+    if (updateErr) return res.status(500).json({ error: 'Update failed' });
+    res.json(updated || session);
+}));
+
+app.post('/api/session/wrong-scan', asyncHandler(async (req, res) => {
+    const { access_code } = req.body;
+    if (!access_code) return res.status(400).json({ error: 'Access code required' });
+
+    // Increment wrong_scans in database
+    const { data, error } = await supabase.rpc('increment_wrong_scans', { code: access_code });
+
+    // Fallback if RPC is not defined
+    if (error) {
+        const { data: session } = await supabase.from('game_sessions').select('wrong_scans').eq('access_code', access_code).single();
+        await supabase.from('game_sessions').update({ wrong_scans: (session?.wrong_scans || 0) + 1 }).eq('access_code', access_code);
     }
 
-    res.json(updated || session);
+    res.json({ success: true });
 }));
 
 app.post('/api/session/update', validateSession, asyncHandler(async (req, res) => {
@@ -223,17 +233,26 @@ app.get('/api/admin/stats', validateAdmin, asyncHandler(async (req, res) => {
 
 app.get('/api/admin/players', validateAdmin, asyncHandler(async (req, res) => {
     const { data: codes } = await supabase.from('access_codes').select('code, status, created_at, user_name').order('created_at', { ascending: false }).limit(100);
-    const { data: sessions } = await supabase.from('game_sessions').select('access_code, current_clue_index, rewards_earned, started_at, completed_at');
+    const { data: sessions } = await supabase.from('game_sessions').select('access_code, current_clue_index, rewards_earned, started_at, completed_at, expires_at, status, wrong_scans');
+
     const players = codes.map(code => {
         const session = sessions?.find(s => s.access_code === code.code);
+
+        // Dynamic status check: If active but past expires_at, it's expired
+        let status = code.status;
+        if (status === 'active' && session && new Date(session.expires_at) < new Date()) {
+            status = 'expired';
+        }
+
         return {
             code: code.code,
-            status: code.status,
+            status: status,
             user_name: code.user_name || '-',
             cluesDone: session?.current_clue_index || 0,
             rewards: session?.rewards_earned?.length || 0,
             started: session?.started_at,
-            completedAt: session?.completed_at
+            completedAt: session?.completed_at,
+            wrongScans: session?.wrong_scans || 0
         };
     });
     res.json(players);

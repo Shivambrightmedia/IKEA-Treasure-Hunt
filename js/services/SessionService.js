@@ -81,6 +81,17 @@ class SessionService {
     }
 
     /**
+     * Report an incorrect scan to increment count
+     * @param {string} accessCode 
+     */
+    async reportWrongScan(accessCode) {
+        return await this.db.fetchApi('/session/wrong-scan', {
+            method: 'POST',
+            body: JSON.stringify({ access_code: accessCode })
+        });
+    }
+
+    /**
      * Add reward to session
      * @param {string} accessCode - Access code
      * @param {Object} reward - Reward object

@@ -13,6 +13,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE IF NOT EXISTS access_codes (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     code VARCHAR(6) UNIQUE NOT NULL,
+    user_name VARCHAR(255),
     status VARCHAR(20) DEFAULT 'unused' CHECK (status IN ('unused', 'active', 'completed', 'expired')),
     created_at TIMESTAMPTZ DEFAULT NOW(),
     activated_at TIMESTAMPTZ,
@@ -34,6 +35,7 @@ CREATE TABLE IF NOT EXISTS game_sessions (
     started_at TIMESTAMPTZ DEFAULT NOW(),
     expires_at TIMESTAMPTZ NOT NULL,
     current_clue_index INTEGER DEFAULT 0,
+    wrong_scans INTEGER DEFAULT 0,
     completed_clues JSONB DEFAULT '[]'::jsonb,
     assigned_clues JSONB DEFAULT '[]'::jsonb,
     rewards_earned JSONB DEFAULT '[]'::jsonb,
@@ -78,6 +80,15 @@ CREATE TABLE IF NOT EXISTS analytics_logs (
     event_type VARCHAR(50) NOT NULL,
     event_data JSONB DEFAULT '{}'::jsonb,
     created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- =====================================================
+-- Table: login_attempts (for rate limiting)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS login_attempts (
+    ip VARCHAR(45) PRIMARY KEY,
+    attempts INTEGER DEFAULT 0,
+    last_attempt TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Index for analytics queries

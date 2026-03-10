@@ -275,6 +275,12 @@ class GameManager {
             await this.completeCurrentClue();
         } else {
             console.log(`Wrong marker. Expected ${this.currentClue.targetIndex}, got ${markerIndex}`);
+
+            // Report wrong scan to database
+            this.sessionService.reportWrongScan(this.player.accessCode).catch(err => {
+                console.warn('Failed to report wrong scan:', err.message);
+            });
+
             if (this.onError) {
                 this.onError(`Wrong zone! (Target Index: ${markerIndex}) Check your clue.`);
             }

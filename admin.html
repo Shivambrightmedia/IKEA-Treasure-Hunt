@@ -376,6 +376,7 @@
                             <th>Name</th>
                             <th>Status</th>
                             <th>Clues Done</th>
+                            <th>Wrong Scans</th>
                             <th>Rewards</th>
                             <th>Started</th>
                             <th>Completed At</th>
@@ -530,7 +531,8 @@
                     <td><strong>${p.code}</strong></td>
                     <td style="color: #f1c40f;">${p.user_name}</td>
                     <td><span class="status-badge status-${p.status}">${p.status.toUpperCase()}</span></td>
-                    <td>${p.cluesDone} / 3</td>
+                    <td>${p.cluesDone} / 40</td>
+                    <td style="color: #ff8e8e; font-weight: bold;">${p.wrongScans || 0}</td>
                     <td>🎁 ${p.rewards}</td>
                     <td>${p.started ? new Date(p.started).toLocaleString() : '-'}</td>
                     <td>${p.completedAt ? new Date(p.completedAt).toLocaleString() : '-'}</td>
