@@ -74,28 +74,40 @@ function updateARSource(fileName) {
     const debugEl = document.getElementById('debug-file');
     if (debugEl) debugEl.textContent = `(${fileName})`;
 
-    console.log(`[AR-Switch] Nuclear reset: Reloading with ${fileName}`);
+    // CACHE BUSTER: Add a timestamp to force the browser to actually download the new file
+    const cacheBuster = `?v=${Date.now()}`;
+    const fileWithBuster = fileName + cacheBuster;
+
+    console.log(`[AR-Switch] Hot-swapping to: ${fileWithBuster}`);
     const scene = document.querySelector('a-scene');
 
     if (scene) {
-        // 1. Force stop and remove
         const arSystem = scene.systems['mindar-image-system'];
-        if (arSystem) arSystem.stop();
-        scene.removeAttribute('mindar-image');
 
-        // 2. Wait 1.5s for the browser to clear the heavy .mind file from memory
-        setTimeout(() => {
-            currentARFile = fileName;
-            scene.setAttribute('mindar-image', `imageTargetSrc: ${fileName}; autoStart: true; uiScanning: yes; uiLoading: yes;`);
+        // 1. Update the attribute (this tells MindAR what to load)
+        scene.setAttribute('mindar-image', `imageTargetSrc: ${fileWithBuster}; autoStart: true; uiScanning: yes; uiLoading: yes;`);
 
-            // 3. Final kickstart for some mobile browsers
+        // 2. Smooth Reset: Restart just the tracking engine, not the camera
+        if (arSystem) {
+            // We stop the tracking loop but the video element stays alive in the DOM
+            if (arSystem.mainLoop) {
+                cancelAnimationFrame(arSystem.mainLoop);
+                arSystem.mainLoop = null;
+            }
+
+            // Give the browser 500ms to register the attribute change before re-init
             setTimeout(() => {
-                const updatedArSystem = scene.systems['mindar-image-system'];
-                if (updatedArSystem && !updatedArSystem.mainLoop) {
-                    updatedArSystem.start();
-                }
+                arSystem.init().then(() => {
+                    arSystem.start();
+                    currentARFile = fileName;
+                    console.log(`[AR-Switch] Hot-swap successful: ${fileName}`);
+                }).catch(err => {
+                    console.error("[AR-Switch] Hot-swap failed, trying full restart:", err);
+                    arSystem.stop();
+                    arSystem.start();
+                });
             }, 500);
-        }, 1500);
+        }
     }
 }
 
