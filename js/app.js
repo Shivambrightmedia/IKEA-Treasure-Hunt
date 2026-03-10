@@ -73,26 +73,17 @@ function updateARSource(fileName) {
     console.log(`[AR-Switch] Switching target to: ${fileName}`);
     const scene = document.querySelector('a-scene');
     if (scene) {
-        const arSystem = scene.systems['mindar-image-system'];
+        console.log(`[AR-Switch] Nuclear reset: Reloading with ${fileName}`);
 
-        // 1. Clear current state
-        if (arSystem) {
-            arSystem.stop();
-        }
+        // 1. Completely remove the attribute to kill the current system
+        scene.removeAttribute('mindar-image');
 
-        // 2. Update the source file
-        scene.setAttribute('mindar-image', `imageTargetSrc: ${fileName}; autoStart: false; uiScanning: yes; uiLoading: yes;`);
-
-        // 3. Re-initialize and Re-start
+        // 2. Wait for the browser to clear memory, then re-inject the new source
         setTimeout(() => {
-            const newArSystem = scene.systems['mindar-image-system'];
-            if (newArSystem) {
-                console.log(`[AR-Switch] Re-starting system with ${fileName}`);
-                // In MindAR 1.2+ we can use start() again after stop()
-                newArSystem.start();
-                currentARFile = fileName;
-            }
-        }, 500);
+            scene.setAttribute('mindar-image', `imageTargetSrc: ${fileName}; autoStart: true; uiScanning: yes; uiLoading: yes;`);
+            currentARFile = fileName;
+            console.log(`[AR-Switch] System re-injected with ${fileName}`);
+        }, 1000); // 1 second pause ensures a fresh start
     }
 }
 

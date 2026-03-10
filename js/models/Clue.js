@@ -39,7 +39,7 @@ class CluePool {
             new Clue('clue_1', 0, "Find a lamp shaped like a Cloud", "HINT: It's available in the living area.", "Living Room", "targets.mind"),
             new Clue('clue_2', 1, "What rises in the east, sets in the west, and is also a lamp :)", "HINT: It's in the bedroom area.", "Bedroom", "targets.mind"),
             new Clue('clue_3', 2, "It's fork, It's a spoon, It's both!", "HINT: It's in the kitchen area.", "Kitchen", "targets.mind"),
-            new Clue('clue_4', 0, "One last check! Can you find the giant IKEA Blue Bag?", "HINT: It's near the checkout counters.", "Checkout", "targets1.mind")
+            new Clue('clue_4', 0, "Mission Accomplished? Find the Astronaut to finish your hunt!", "HINT: Look for the space-themed display.", "Space Zone", "targets1.mind")
         ];
     }
 
