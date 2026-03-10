@@ -276,7 +276,7 @@ class GameManager {
         } else {
             console.log(`Wrong marker. Expected ${this.currentClue.targetIndex}, got ${markerIndex}`);
             if (this.onError) {
-                this.onError('Wrong zone! Check your clue and try again.');
+                this.onError(`Wrong zone! (Target Index: ${markerIndex}) Check your clue.`);
             }
         }
     }
