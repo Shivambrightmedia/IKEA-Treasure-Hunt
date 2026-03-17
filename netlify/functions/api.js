@@ -167,7 +167,7 @@ app.post('/api/session/complete-clue', asyncHandler(async (req, res) => {
     const rewardId = `reward_${completedClues.length}`;
 
     // Milestone reward logic
-    if ([1, 10, 20, 30, 40].includes(completedClues.length) && !rewards.some(r => r.id === rewardId)) {
+    if ([1, 2, 3].includes(completedClues.length) && !rewards.some(r => r.id === rewardId)) {
         const barcode = `IKEA-${Date.now().toString(36).toUpperCase()}`;
         rewards.push({
             id: rewardId,

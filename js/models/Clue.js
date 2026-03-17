@@ -34,17 +34,12 @@ class Clue {
  */
 class CluePool {
     constructor() {
-        // Master pool of clues (40 items)
-        this.masterPool = Array.from({ length: 40 }, (_, i) => {
-            const index = i;
-            return new Clue(
-                `clue_${index + 1}`,
-                index,
-                `Hunt Item #${index + 1}: Find Target ${index}`,
-                `HINT: Find the item mapped at target index ${index}.`,
-                "Hunt Zone"
-            );
-        });
+        // Master pool of clues (original 3 IKEA items)
+        this.masterPool = [
+            new Clue('clue_1', 0, 'Find a lamp shaped like a Cloud', "HINT: It's available in the living area.", "Living Room"),
+            new Clue('clue_2', 1, "What rises in the east, sets in the west, and is also a lamp :)", "HINT: It's in the bedroom area.", "Bedroom"),
+            new Clue('clue_3', 2, "It's fork, It's a spoon, It's both!", "HINT: It's in the kitchen area.", "Kitchen")
+        ];
     }
 
     /**
@@ -79,7 +74,8 @@ class CluePool {
      * @returns {Array<string>} Array of clue IDs
      */
     assignRandomClues(count = CONFIG.TOTAL_CLUES_PER_SESSION) {
-        // NO SHUFFLING for testing: Just return the masterPool in order
-        return this.masterPool.slice(0, count).map(clue => clue.id);
+        // Shuffle and return requested number of clues
+        const shuffled = [...this.masterPool].sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, count).map(clue => clue.id);
     }
 }
