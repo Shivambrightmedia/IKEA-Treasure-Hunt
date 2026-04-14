@@ -609,21 +609,22 @@
 <body>
     <!-- Registration Overlay -->
     <div id="registration-overlay">
-        <div class="reg-container" style="background:#222; color:white;">
+        <div class="reg-container">
 
             <!-- STEP 1: Are you a member? -->
             <div id="step-1" class="reg-step active">
-                <h2 style="color:var(--ikea-yellow); font-weight:normal; letter-spacing: 2px; margin-top:0;">IKEA LOGO</h2>
-                <h3 style="margin-bottom: 10px;">Join the treasure hunt experience</h3>
-                <p style="margin-bottom: 30px; font-size: 1.1em; color:#ddd;">Are you an IKEA Member?</p>
+                <h2 style="color:var(--ikea-blue); font-weight:normal; letter-spacing: 2px; margin-top:0;">IKEA LOGO
+                </h2>
+                <h3 style="margin-bottom: 10px; color:var(--ikea-blue);">Join the treasure hunt experience</h3>
+                <p style="margin-bottom: 30px; font-size: 1.1em; color:#333;">Are you an IKEA Member?</p>
 
-                <button class="member-btn primary" id="btn-is-member" style="color:var(--ikea-yellow); border-radius: 30px;">[ YES, I AM A MEMBER ]</button>
-                <button class="member-btn" id="btn-sign-up"
-                    style="color:white; border-color:white; border-radius: 30px;">[ NO, SIGN ME UP ]</button>
+                <button class="member-btn primary" id="btn-is-member" style="border-radius: 30px;">[ YES, I AM A MEMBER
+                    ]</button>
+                <button class="member-btn" id="btn-sign-up" style="border-radius: 30px;">[ NO, SIGN ME UP ]</button>
 
                 <div style="text-align: left; width: 100%; margin-top: 20px;">
-                    <p style="font-weight:bold; margin-bottom:10px;">Why join?</p>
-                    <ul style="padding-left: 20px; line-height: 1.8; font-size: 0.9em; color:#ddd;">
+                    <p style="font-weight:bold; margin-bottom:10px; color:var(--ikea-blue);">Why join?</p>
+                    <ul style="padding-left: 20px; line-height: 1.8; font-size: 0.9em; color:#333;">
                         <li>Unlock rewards</li>
                         <li>Track progress</li>
                         <li>Exclusive offers</li>
@@ -635,44 +636,44 @@
             <div id="step-2" class="reg-step">
                 <div
                     style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; width: 100%;">
-                    <button class="back-btn" id="btn-back-1" style="color:white; margin:0;">&#8592; Back</button>
-                    <span style="font-weight:bold;">Enter Membership</span>
+                    <button class="back-btn" id="btn-back-1" style="margin:0;">&#8592; Back</button>
+                    <span style="font-weight:bold; color:var(--ikea-blue);">Enter Membership</span>
                     <span style="visibility:hidden; width: 50px;">Hide</span>
                 </div>
 
-                <h3 style="margin-bottom: 30px;">Enter your IKEA Membership / Phone Number</h3>
+                <h3 style="margin-bottom: 30px; color:var(--ikea-blue);">Enter your IKEA Membership / Phone Number</h3>
 
                 <div class="input-group" style="width: 100%;">
                     <input type="text" id="membershipInput" placeholder="10-digit number" maxlength="10"
                         pattern="\d{10}" inputmode="numeric" autocomplete="off"
-                        style="text-align: center; font-size: 1.2em; letter-spacing: 2px; background: transparent; color: white; border-color: #555;">
+                        style="text-align: center; font-size: 1.2em; letter-spacing: 2px; background: transparent; color: #333; border-color: #ccc;">
                     <p class="code-error-msg" id="codeErrorMsg" style="text-align:center;">❌ Enter a valid 10-digit
                         number</p>
                 </div>
 
-                <p style="color:#aaa; font-size:0.85em; margin-bottom:30px;">
+                <p style="color:#666; font-size:0.85em; margin-bottom:30px;">
                     <span
-                        style="display:inline-block; border-radius:50%; width:15px; height:15px; text-align:center; background:#444; color:white; line-height:15px; font-size:10px; margin-right:5px;">i</span>
+                        style="display:inline-block; border-radius:50%; width:15px; height:15px; text-align:center; background:#eee; color:#666; line-height:15px; font-size:10px; margin-right:5px;">i</span>
                     Find this in your IKEA app/email
                 </p>
 
-                <button class="member-btn primary" id="btn-continue-2"
-                    style="color:var(--ikea-yellow); border-radius: 30px;">[ CONTINUE ]</button>
+                <button class="member-btn primary" id="btn-continue-2" style="border-radius: 30px;">[ CONTINUE
+                    ]</button>
 
                 <p style="margin-top: 20px; font-size: 0.9em;">
-                    <span style="color:#aaa;">Not a member?</span> <a href="#" id="link-sign-up"
-                        style="color: white; text-decoration:none;">Sign up</a>
+                    <span style="color:#666;">Not a member?</span> <a href="#" id="link-sign-up"
+                        style="color: var(--ikea-blue); text-decoration:none; font-weight:bold;">Sign up</a>
                 </p>
             </div>
 
             <!-- STEP 3: Rules Page -->
             <div id="step-3" class="reg-step">
                 <button class="back-btn" id="btn-back-2"
-                    style="color:white; margin:0; align-self: flex-start; margin-bottom:20px;">&#8592; Back</button>
+                    style="margin:0; align-self: flex-start; margin-bottom:20px;">&#8592; Back</button>
 
-                <h2 style="color:var(--ikea-yellow); margin-top:0;">How to Play!</h2>
+                <h2 style="color:var(--ikea-blue); margin-top:0;">How to Play!</h2>
 
-                <ul class="rules-list" style="color:#ddd;">
+                <ul class="rules-list" style="color:#333;">
                     <li><strong>Explore:</strong> Walk around the IKEA store to find the hidden zones.</li>
                     <li><strong>Scan:</strong> Use your phone's camera to scan the AR markers found in the zones.</li>
                     <li><strong>Solve:</strong> Answer clues to unlock your next destination.</li>
