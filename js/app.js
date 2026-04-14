@@ -254,13 +254,13 @@ async function handleStartClick() {
         const displayName = finalUserName.includes(' : ') ? finalUserName.split(' : ')[1] : finalUserName;
 
         if (isCompleted) {
-            await gameManager.showEndResults(code, 'completed', displayName);
+            await gameManager.showEndResults(code, 'completed', finalUserName);
         } else if (isExpired) {
-            await gameManager.showEndResults(code, 'expired', displayName);
+            await gameManager.showEndResults(code, 'expired', finalUserName);
         } else if (isResume) {
-            await gameManager.resumeGame(code, displayName);
+            await gameManager.resumeGame(code, finalUserName);
         } else {
-            await gameManager.startNewGame(code, displayName);
+            await gameManager.startNewGame(code, finalUserName);
         }
     } catch (error) {
         console.error('Mobile Connection Error:', error);
