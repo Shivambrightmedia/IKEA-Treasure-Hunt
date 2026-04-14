@@ -69,10 +69,10 @@ class GameManager {
                 existingSession = await this.sessionService.getSession(accessCode);
             } catch (e) {
                 // No session found — this is expected for new games
-                console.log('No existing session found, creating new one.');
+                // console.log('No existing session found, creating new one.');
             }
             if (existingSession) {
-                console.log('Session already exists, resuming instead of creating...');
+                // console.log('Session already exists, resuming instead of creating...');
                 return await this.resumeGame(accessCode, name);
             }
 
@@ -103,7 +103,7 @@ class GameManager {
                 this.onStateChange('playing', this.player.getDashboard(this.timerManager.getRemainingMs()));
             }
 
-            console.log('New game started:', accessCode);
+            // console.log('New game started:', accessCode);
         } catch (error) {
             console.error('Start game error:', error);
             if (this.onError) this.onError('Failed to start game. Please try again.');
@@ -130,7 +130,7 @@ class GameManager {
 
             // If no session found, start new game instead
             if (!session) {
-                console.log('No session found for code, starting new game...');
+                // console.log('No session found for code, starting new game...');
                 await this.startNewGame(accessCode);
                 return;
             }
@@ -171,7 +171,7 @@ class GameManager {
                 this.onStateChange('playing', this.player.getDashboard(remainingMs));
             }
 
-            console.log('Game resumed:', accessCode);
+            // console.log('Game resumed:', accessCode);
         } catch (error) {
             console.error('Resume game error:', error);
             if (this.onError) this.onError('Failed to resume session. Database might be paused or error happened.');
@@ -186,7 +186,7 @@ class GameManager {
      */
     async showEndResults(accessCode, reason, name = 'Anonymous') {
         try {
-            console.log(`Displaying ${reason} results for:`, accessCode);
+            // console.log(`Displaying ${reason} results for:`, accessCode);
 
             // Create player
             this.player = new Player(accessCode, name);
@@ -237,7 +237,7 @@ class GameManager {
             },
             // onWarning
             (remainingMs) => {
-                console.log('Timer warning:', this.timerManager.formatTime(remainingMs));
+                // console.log('Timer warning:', this.timerManager.formatTime(remainingMs));
             }
         );
 
@@ -276,7 +276,7 @@ class GameManager {
         if (parseInt(markerIndex) === this.currentClue.targetIndex) {
             await this.completeCurrentClue();
         } else {
-            console.log(`Wrong marker. Expected ${this.currentClue.targetIndex}, got ${markerIndex}`);
+            // console.log(`Wrong marker. Expected ${this.currentClue.targetIndex}, got ${markerIndex}`);
 
             // Report wrong scan to database
             this.sessionService.reportWrongScan(this.player.accessCode).catch(err => {
@@ -348,7 +348,7 @@ class GameManager {
      */
     async handleGameCompletion() {
         try {
-            console.log('🎉 All clues found! Completing game...');
+            // console.log('🎉 All clues found! Completing game...');
 
             if (this.timerManager) this.timerManager.stop();
             if (this._syncInterval) clearInterval(this._syncInterval);
@@ -377,7 +377,7 @@ class GameManager {
                 }
             }, 1000);
 
-            console.log('Game completed successfully! Total rewards:', this.player.getRewards().length);
+            // console.log('Game completed successfully! Total rewards:', this.player.getRewards().length);
         } catch (error) {
             console.error('Game completion error:', error);
             // Still try to show end screen even if saving fails
@@ -408,7 +408,7 @@ class GameManager {
                 }
             }
 
-            console.log('Game expired!');
+            // console.log('Game expired!');
         } catch (error) {
             console.error('Game expiry error:', error);
         }

@@ -12,13 +12,13 @@ AFRAME.registerComponent("marker-handler", {
 
         // Marker detected in camera view
         this.el.addEventListener("targetFound", () => {
-            console.log(`[WebAR] Marker FOUND: ${markerId}`);
+            // console.log(`[WebAR] Marker FOUND: ${markerId}`);
             sendMarkerEventToUnity(markerId, "found");
         });
 
         // Marker lost from camera view
         this.el.addEventListener("targetLost", () => {
-            console.log(`[WebAR] Marker LOST: ${markerId}`);
+            // console.log(`[WebAR] Marker LOST: ${markerId}`);
             sendMarkerEventToUnity(markerId, "lost");
         });
     }
@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (scene) {
         scene.addEventListener("arReady", () => {
-            console.log("[WebAR] AR scene is ready");
+            // console.log("[WebAR] AR scene is ready");
             notifyUnityARReady();
         });
 

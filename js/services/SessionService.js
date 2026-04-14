@@ -64,7 +64,7 @@ class SessionService {
      * @param {number} nextIndex - Next clue index
      */
     async completeClue(accessCode, clueId, nextIndex) {
-        console.log('Completing clue:', { accessCode, clueId, nextIndex });
+        // console.log('Completing clue:', { accessCode, clueId, nextIndex });
 
         // Call backend directly — it handles everything atomically
         const result = await this.db.fetchApi('/session/complete-clue', {
@@ -76,7 +76,7 @@ class SessionService {
             })
         });
 
-        console.log('Clue completed successfully');
+        // console.log('Clue completed successfully');
         return result;
     }
 
@@ -97,7 +97,7 @@ class SessionService {
      * @param {Object} reward - Reward object
      */
     async addReward(accessCode, reward) {
-        console.log('Adding reward:', { accessCode, reward });
+        // console.log('Adding reward:', { accessCode, reward });
 
         let session = null;
         try {
@@ -113,7 +113,7 @@ class SessionService {
             rewards_earned: rewards
         });
 
-        console.log('Reward added successfully');
+        // console.log('Reward added successfully');
     }
 
     /**

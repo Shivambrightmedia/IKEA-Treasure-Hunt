@@ -11,7 +11,7 @@ let uiManager = null;
  * Initialize the application
  */
 function initApp() {
-    console.log('Initializing IKEA AR Treasure Hunt...');
+    // console.log('Initializing IKEA AR Treasure Hunt...');
 
     // Initialize services (Dependency Injection)
     const databaseService = new DatabaseService();
@@ -35,13 +35,13 @@ function initApp() {
     // Initialize UI
     initUI();
 
-    console.log('App initialized successfully');
+    // console.log('App initialized successfully');
 }
 
 // ==================== UI CALLBACKS ====================
 
 function handleStateChange(state, dashboard) {
-    console.log('State changed:', state, dashboard);
+    // console.log('State changed:', state, dashboard);
 
     if (state === 'playing') {
         showGameScreen();
@@ -55,7 +55,7 @@ function handleStateChange(state, dashboard) {
 }
 
 function handleClueChange(clue, currentNum, totalNum) {
-    console.log('Clue changed:', clue);
+    // console.log('Clue changed:', clue);
     updateCluePanel(clue, currentNum, totalNum);
 
     // Switch AR targets if needed
@@ -72,7 +72,7 @@ let currentARFile = 'targets.mind';
 function updateARSource(fileName) {
     // We now use a single targets.mind for all 4 targets.
     // This keeps the camera running smoothly without interruptions.
-    console.log("AR Scanner active with universal target file.");
+    // console.log("AR Scanner active with universal target file.");
 }
 
 function handleTimerUpdate(formattedTime, remainingMs) {
@@ -80,12 +80,12 @@ function handleTimerUpdate(formattedTime, remainingMs) {
 }
 
 function handleGameEnd(reason, dashboard) {
-    console.log('Game ended:', reason);
+    // console.log('Game ended:', reason);
     showEndScreen(reason, dashboard);
 }
 
 function handleRewardUnlock(reward) {
-    console.log('Reward unlocked:', reward);
+    // console.log('Reward unlocked:', reward);
     showRewardUnlock(reward);
 }
 
@@ -582,7 +582,7 @@ function initAR() {
     if (scene) {
         const arSystem = scene.systems['mindar-image-system'];
         scene.addEventListener('arReady', () => {
-            console.log('AR Ready');
+            // console.log('AR Ready');
             if (statusEl) statusEl.textContent = 'Hunting...';
         });
         scene.addEventListener('arError', (event) => {
