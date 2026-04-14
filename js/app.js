@@ -209,17 +209,44 @@ async function handleStartClick() {
     startBtn.textContent = 'Loading...';
 
     try {
+        statusEl.textContent = 'Checking membership...';
+
+        let code;
+        let isResume = false;
+        let isCompleted = false;
+        let isExpired = false;
+
+        try {
+            // Check if this membership number already has an active session
+            const result = await gameManager.accessCodeService.db.fetchApi('/check-member', {
+                method: 'POST',
+                body: JSON.stringify({ membershipNumber })
+            });
+            code = result.code;
+            isResume = result.isResume;
+            isCompleted = result.isCompleted;
+            isExpired = result.isExpired;
+        } catch (err) {
+            // 404 Not found means new player. Generate a new session code.
+            const newCodeData = await gameManager.accessCodeService.createCode(membershipNumber);
+            code = newCodeData.code;
+        }
+
         // Hide overlay so the camera can start without delay
         showGameScreen();
         initAR();
 
-        // Dynamically create a session using the 10-digit number as the username
-        const newCodeData = await gameManager.accessCodeService.createCode(membershipNumber);
-        const code = newCodeData.code;
+        statusEl.textContent = isResume ? 'Resuming Hunt...' : 'Starting Hunt!';
 
-        statusEl.textContent = 'Starting Hunt!';
-
-        await gameManager.startNewGame(code, membershipNumber);
+        if (isCompleted) {
+            await gameManager.showEndResults(code, 'completed', membershipNumber);
+        } else if (isExpired) {
+            await gameManager.showEndResults(code, 'expired', membershipNumber);
+        } else if (isResume) {
+            await gameManager.resumeGame(code, membershipNumber);
+        } else {
+            await gameManager.startNewGame(code, membershipNumber);
+        }
     } catch (error) {
         console.error('Mobile Connection Error:', error);
         showInlineError('⚠️ Network Error: Check your internet connection');

@@ -28,10 +28,18 @@ class DatabaseService {
     // Adapt selectOne to use our server's validate-code or session endpoint
     async selectOne(table, conditions = {}) {
         if (table === 'access_codes' && conditions.code) {
-            return await this.fetchApi('/validate-code', {
-                method: 'POST',
-                body: JSON.stringify({ code: conditions.code })
-            });
+            try {
+                return await this.fetchApi('/validate-code', {
+                    method: 'POST',
+                    body: JSON.stringify({ code: conditions.code })
+                });
+            } catch (err) {
+                // If it's a "Code not found" error, return null (meaning the code is free to use)
+                if (err.message.includes('not found') || err.message.includes('attempts remaining') || err.message.includes('locked')) {
+                    return null;
+                }
+                throw err;
+            }
         }
 
         if (table === 'game_sessions' && conditions.access_code) {

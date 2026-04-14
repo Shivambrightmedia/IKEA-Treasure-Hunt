@@ -126,6 +126,31 @@ app.post('/api/validate-code', asyncHandler(async (req, res) => {
     });
 }));
 
+app.post('/api/check-member', asyncHandler(async (req, res) => {
+    const { membershipNumber } = req.body;
+
+    const { data: record, error } = await supabase
+        .from('access_codes')
+        .select('*')
+        .eq('user_name', membershipNumber)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    if (error || !record) {
+        return res.status(404).json({ error: 'Session not found' });
+    }
+
+    res.json({
+        code: record.code,
+        valid: true,
+        user_name: record.user_name,
+        isResume: record.status === 'active',
+        isCompleted: record.status === 'completed',
+        isExpired: record.status === 'expired'
+    });
+}));
+
 app.get('/api/session/:code', asyncHandler(async (req, res) => {
     const { code } = req.params;
     const { data, error } = await supabase
