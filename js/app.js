@@ -96,18 +96,55 @@ function handleError(message) {
 
 function initUI() {
     // Get DOM elements
-    const codeInput = document.getElementById('accessCodeInput');
+    const codeInput = document.getElementById('membershipInput');
     const startBtn = document.getElementById('startBtn');
     const cpOkBtn = document.getElementById('cp-ok');
     const cpToggleBar = document.getElementById('cp-toggle-bar');
     const cpToggleIcon = document.getElementById('cp-toggle-icon');
 
-    // Access code input - format as user types
+    // Access code input - format as user types (10 digits)
     if (codeInput) {
         codeInput.addEventListener('input', (e) => {
-            e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6);
+            e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10);
         });
     }
+
+    // Onboarding Steps Logic
+    const step1 = document.getElementById('step-1');
+    const step2 = document.getElementById('step-2');
+    const step3 = document.getElementById('step-3');
+
+    document.getElementById('btn-is-member')?.addEventListener('click', () => {
+        step1.classList.remove('active');
+        step2.classList.add('active');
+    });
+
+    const goToSignup = () => window.location.href = 'https://www.ikea.com/in/en/profile/signup/';
+    document.getElementById('btn-sign-up')?.addEventListener('click', goToSignup);
+    document.getElementById('link-sign-up')?.addEventListener('click', (e) => { e.preventDefault(); goToSignup(); });
+
+    document.getElementById('btn-back-1')?.addEventListener('click', () => {
+        step2.classList.remove('active');
+        step1.classList.add('active');
+    });
+
+    document.getElementById('btn-back-2')?.addEventListener('click', () => {
+        step3.classList.remove('active');
+        step2.classList.add('active');
+    });
+
+    document.getElementById('btn-continue-2')?.addEventListener('click', () => {
+        const input = document.getElementById('membershipInput');
+        const errorMsg = document.getElementById('codeErrorMsg');
+        if (input.value.length === 10) {
+            errorMsg.style.display = 'none';
+            step2.classList.remove('active');
+            step3.classList.add('active');
+        } else {
+            errorMsg.style.display = 'block';
+            errorMsg.style.opacity = '1';
+        }
+    });
 
     // Start button click
     if (startBtn) {
@@ -146,63 +183,48 @@ function initUI() {
     }
 }
 
-// Brute force lockout timer
 let lockoutTimer = null;
 
 async function handleStartClick() {
-    const codeInput = document.getElementById('accessCodeInput');
+    const codeInput = document.getElementById('membershipInput');
     const startBtn = document.getElementById('startBtn');
-    const code = codeInput.value.trim();
+    const membershipNumber = codeInput.value.trim();
     const statusEl = document.getElementById('ar-status');
 
     if (lockoutTimer) return; // Prevent clicking while locked out
 
-    if (!code || code.length !== 6) {
-        showInlineError('❌ Please enter a 6-digit code');
+    if (!membershipNumber || membershipNumber.length !== 10) {
+        showInlineError('❌ Please enter a 10-digit number');
+        const step2 = document.getElementById('step-2');
+        const step3 = document.getElementById('step-3');
+        if (step3.classList.contains('active')) {
+            step3.classList.remove('active');
+            step2.classList.add('active');
+        }
         return;
     }
 
-    statusEl.textContent = 'Validating code...';
+    statusEl.textContent = 'Preparing Game...';
+    startBtn.disabled = true;
+    startBtn.textContent = 'Loading...';
 
     try {
-        const result = await gameManager.validateCode(code);
-
-        if (!result.valid) {
-            const errorMsg = result.error || '❌ Your code is incorrect';
-
-            // Check if we are rate limited
-            if (errorMsg.includes('wait') && errorMsg.includes('seconds')) {
-                const seconds = parseInt(errorMsg.match(/\d+/)[0]);
-                startLockoutCountdown(seconds);
-            } else {
-                showInlineError(errorMsg);
-            }
-
-            statusEl.textContent = 'Enter your code';
-            return;
-        }
-
-        // START AR ONLY AFTER VALIDATION (User request)
+        // Hide overlay so the camera can start without delay
+        showGameScreen();
         initAR();
 
-        // Show message
-        statusEl.textContent = result.message;
+        // Dynamically create a session using the 10-digit number as the username
+        const newCodeData = await gameManager.accessCodeService.createCode(membershipNumber);
+        const code = newCodeData.code;
 
-        // Start/resume logic
-        const playerName = result.user_name || 'Adventurer';
+        statusEl.textContent = 'Starting Hunt!';
 
-        if (result.isCompleted) {
-            await gameManager.showEndResults(code, 'completed', playerName);
-        } else if (result.isExpired) {
-            await gameManager.showEndResults(code, 'expired', playerName);
-        } else if (result.isResume) {
-            await gameManager.resumeGame(code, playerName);
-        } else {
-            await gameManager.startNewGame(code, playerName);
-        }
+        await gameManager.startNewGame(code, membershipNumber);
     } catch (error) {
         console.error('Mobile Connection Error:', error);
-        showInlineError('⚠️ Network Error: Check your internet/VPN');
+        showInlineError('⚠️ Network Error: Check your internet connection');
+        startBtn.disabled = false;
+        startBtn.textContent = '[ START HUNTING ]';
     }
 }
 
@@ -215,7 +237,7 @@ function startLockoutCountdown(seconds) {
 
     const errorEl = document.getElementById('codeErrorMsg');
     const startBtn = document.getElementById('startBtn');
-    const codeInput = document.getElementById('accessCodeInput');
+    const codeInput = document.getElementById('membershipInput');
 
     let remaining = seconds;
 
@@ -413,7 +435,7 @@ function showErrorMessage(message) {
 
 function showInlineError(message) {
     const errorMsg = document.getElementById('codeErrorMsg');
-    const codeInput = document.getElementById('accessCodeInput');
+    const codeInput = document.getElementById('membershipInput');
     const statusEl = document.getElementById('ar-status');
 
     if (errorMsg) {

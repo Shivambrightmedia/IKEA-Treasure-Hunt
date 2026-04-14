@@ -21,9 +21,10 @@ class AccessCodeService {
 
     /**
      * Create a new access code in the database
+     * @param {string} userName - Optional user name (e.g. 10-digit number)
      * @returns {Promise<Object>} Created access code record
      */
-    async createCode() {
+    async createCode(userName = null) {
         let code;
         let attempts = 0;
         const maxAttempts = 10;
@@ -42,6 +43,7 @@ class AccessCodeService {
 
         const record = {
             code: code,
+            user_name: userName,
             status: CONFIG.GAME_STATUS.UNUSED,
             created_at: new Date().toISOString()
         };

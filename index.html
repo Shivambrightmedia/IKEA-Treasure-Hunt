@@ -543,6 +543,65 @@
             font-weight: bold;
             color: #333;
         }
+
+        /* Custom Step Styling */
+        .reg-step {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .reg-step.active {
+            display: flex;
+        }
+
+        .member-btn {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid var(--ikea-blue);
+            border-radius: 4px;
+            background: transparent;
+            color: var(--ikea-blue);
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 15px;
+            transition: all 0.2s;
+        }
+
+        .member-btn:hover {
+            background: rgba(0, 81, 186, 0.1);
+        }
+
+        .member-btn.primary {
+            background: var(--ikea-blue);
+            color: var(--ikea-yellow);
+        }
+
+        .member-btn.primary:hover {
+            background: #003e8e;
+        }
+
+        .back-btn {
+            align-self: flex-start;
+            background: none;
+            border: none;
+            color: var(--ikea-blue);
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 20px;
+            padding: 0;
+        }
+
+        .rules-list {
+            text-align: left;
+            color: #333;
+            font-size: 0.95em;
+            line-height: 1.5;
+            margin-bottom: 25px;
+            padding-left: 20px;
+        }
     </style>
 
 </head>
@@ -550,21 +609,82 @@
 <body>
     <!-- Registration Overlay -->
     <div id="registration-overlay">
-        <div class="reg-container">
-            <h1 class="reg-title">IKEA Treasure Hunt</h1>
-            <p style="color:#666; margin-bottom:20px;">Explore the store, find clues, earn rewards!</p>
+        <div class="reg-container" style="background:#222; color:white;">
 
-            <div class="input-group">
-                <label for="accessCodeInput">Enter Your 6-Digit Access Code</label>
-                <input type="text" id="accessCodeInput" placeholder="123456" maxlength="6" pattern="\d{6}"
-                    inputmode="numeric" autocomplete="off"
-                    style="text-align: center; font-size: 1.5em; letter-spacing: 8px;">
-                <p class="code-error-msg" id="codeErrorMsg">❌ Your code is incorrect</p>
+            <!-- STEP 1: Are you a member? -->
+            <div id="step-1" class="reg-step active">
+                <h2 style="color:var(--ikea-yellow); font-weight:normal; letter-spacing: 2px; margin-top:0;">IKEA LOGO
+                </h2>
+                <h3 style="margin-bottom: 30px;">Are you an IKEA Member?</h3>
+                <p style="margin-bottom: 30px; font-size: 0.9em; color:#ddd;">Join the treasure hunt experience</p>
+
+                <button class="member-btn primary" id="btn-is-member"
+                    style="color:var(--ikea-yellow); border-radius: 30px;">[ YES, I AM A MEMBER ]</button>
+                <button class="member-btn" id="btn-sign-up"
+                    style="color:white; border-color:white; border-radius: 30px;">[ NO, SIGN ME UP ]</button>
+
+                <div style="text-align: left; width: 100%; margin-top: 20px;">
+                    <p style="font-weight:bold; margin-bottom:10px;">Why join?</p>
+                    <ul style="padding-left: 20px; line-height: 1.8; font-size: 0.9em; color:#ddd;">
+                        <li>Unlock rewards</li>
+                        <li>Track progress</li>
+                        <li>Exclusive offers</li>
+                    </ul>
+                </div>
             </div>
 
-            <p style="color:#888; font-size:0.85em; margin-bottom:20px;">Don't have a code? Register at IKEA.com</p>
+            <!-- STEP 2: Membership Input -->
+            <div id="step-2" class="reg-step">
+                <div
+                    style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; width: 100%;">
+                    <button class="back-btn" id="btn-back-1" style="color:white; margin:0;">&#8592; Back</button>
+                    <span style="font-weight:bold;">Enter Membership</span>
+                    <span style="visibility:hidden; width: 50px;">Hide</span>
+                </div>
 
-            <button class="start-btn" id="startBtn">Start Hunting</button>
+                <h3 style="margin-bottom: 30px;">Enter your IKEA Membership / Phone Number</h3>
+
+                <div class="input-group" style="width: 100%;">
+                    <input type="text" id="membershipInput" placeholder="10-digit number" maxlength="10"
+                        pattern="\d{10}" inputmode="numeric" autocomplete="off"
+                        style="text-align: center; font-size: 1.2em; letter-spacing: 2px; background: transparent; color: white; border-color: #555;">
+                    <p class="code-error-msg" id="codeErrorMsg" style="text-align:center;">❌ Enter a valid 10-digit
+                        number</p>
+                </div>
+
+                <p style="color:#aaa; font-size:0.85em; margin-bottom:30px;">
+                    <span
+                        style="display:inline-block; border-radius:50%; width:15px; height:15px; text-align:center; background:#444; color:white; line-height:15px; font-size:10px; margin-right:5px;">i</span>
+                    Find this in your IKEA app/email
+                </p>
+
+                <button class="member-btn primary" id="btn-continue-2"
+                    style="color:var(--ikea-yellow); border-radius: 30px;">[ CONTINUE ]</button>
+
+                <p style="margin-top: 20px; font-size: 0.9em;">
+                    <span style="color:#aaa;">Not a member?</span> <a href="#" id="link-sign-up"
+                        style="color: white; text-decoration:none;">Sign up</a>
+                </p>
+            </div>
+
+            <!-- STEP 3: Rules Page -->
+            <div id="step-3" class="reg-step">
+                <button class="back-btn" id="btn-back-2"
+                    style="color:white; margin:0; align-self: flex-start; margin-bottom:20px;">&#8592; Back</button>
+
+                <h2 style="color:var(--ikea-yellow); margin-top:0;">How to Play!</h2>
+
+                <ul class="rules-list" style="color:#ddd;">
+                    <li><strong>Explore:</strong> Walk around the IKEA store to find the hidden zones.</li>
+                    <li><strong>Scan:</strong> Use your phone's camera to scan the AR markers found in the zones.</li>
+                    <li><strong>Solve:</strong> Answer clues to unlock your next destination.</li>
+                    <li><strong>Win:</strong> Complete all clues to earn exciting IKEA rewards!</li>
+                </ul>
+
+                <button class="start-btn" id="startBtn" style="border-radius:30px; margin-top: 20px;">[ START HUNTING
+                    ]</button>
+            </div>
+
         </div>
     </div>
 
@@ -651,7 +771,7 @@
             <a-entity mindar-image-target="targetIndex: 0" marker-handler="markerIndex: 0"></a-entity>
             <a-entity mindar-image-target="targetIndex: 1" marker-handler="markerIndex: 1"></a-entity>
             <a-entity mindar-image-target="targetIndex: 2" marker-handler="markerIndex: 2"></a-entity>
-            </a-scene>
+        </a-scene>
     </div>
 
     <!-- Supabase JS is now handled in the backend ONLY -->
