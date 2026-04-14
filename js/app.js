@@ -344,13 +344,13 @@ function updateDashboard(dashboard) {
     if (menuName) {
         let displayName = dashboard.userName || 'Adventurer';
         let displayPhone = '-';
-        
+
         if (displayName.includes(' : ')) {
             const parts = displayName.split(' : ');
             displayPhone = parts[0];
             displayName = parts[1];
         }
-        
+
         menuName.textContent = displayName;
         if (menuPhone) menuPhone.textContent = displayPhone;
     }
@@ -359,14 +359,47 @@ function updateDashboard(dashboard) {
         if (dashboard.rewards.length === 0) {
             menuRewards.innerHTML = '<p style="color: #999; font-style: italic; font-size: 0.9em;">No rewards found yet. Keep hunting!</p>';
         } else {
-            menuRewards.innerHTML = dashboard.rewards.map(r => `
-                <div class="menu-reward-item">
+            menuRewards.innerHTML = dashboard.rewards.map((r, i) => `
+                <div class="menu-reward-item" id="reward-${i}">
                     <span class="reward-type">${r.type === 'final' ? '🏆 FINAL REWARD' : '🎁 MILESTONE reward'}</span>
-                    <span class="reward-barcode">${r.barcode}</span>
+                    <div class="reward-reveal-container">
+                        <span class="reward-barcode hidden" id="barcode-${i}">${r.barcode}</span>
+                        <button class="redeem-btn" id="redeem-${i}" onclick="redeemReward('${i}')">REDEEM</button>
+                    </div>
                 </div>
             `).join('');
         }
     }
+}
+
+/**
+ * Reveal reward code for 15 seconds
+ */
+function redeemReward(index) {
+    const barcode = document.getElementById(`barcode-${index}`);
+    const btn = document.getElementById(`redeem-${index}`);
+
+    if (!barcode || !btn) return;
+
+    // Show barcode, hide button
+    barcode.classList.remove('hidden');
+    btn.style.display = 'none';
+
+    // Start 15s countdown
+    let timeLeft = 15;
+    const originalText = btn.textContent;
+
+    const timer = setInterval(() => {
+        timeLeft--;
+        if (timeLeft <= 0) {
+            clearInterval(timer);
+            barcode.classList.add('hidden');
+            btn.style.display = 'block';
+            btn.textContent = 'REDEEMED';
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+        }
+    }, 1000);
 }
 
 function updateCluePanel(clue, currentNum, totalNum) {

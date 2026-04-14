@@ -34,11 +34,14 @@ class Clue {
  */
 class CluePool {
     constructor() {
-        // Master pool of clues (original 3 IKEA items)
+        // Master pool of clues (6 IKEA items)
         this.masterPool = [
-            new Clue('clue_1', 0, 'Find a lamp shaped like a Cloud', "HINT: It's available in the living area.", "Living Room"),
-            new Clue('clue_2', 1, "What rises in the east, sets in the west, and is also a lamp :)", "HINT: It's in the bedroom area.", "Bedroom"),
-            new Clue('clue_3', 2, "It's fork, It's a spoon, It's both!", "HINT: It's in the kitchen area.", "Kitchen")
+            new Clue('clue_1', 0, 'Soft, white, and covers your dreams. Find the bed sheet!', "HINT: Look in the Bedroom textiles area.", "Bedroom"),
+            new Clue('clue_2', 1, "I welcome your feet at the door or by the bed. Find the mat!", "HINT: Check the textiles or entryway section.", "Home Textiles"),
+            new Clue('clue_3', 2, "I have stripes but I'm soft and cuddly. Spot the Tiger Pillow!", "HINT: It's in the Children's IKEA or Living Room area.", "Living Room"),
+            new Clue('clue_4', 3, "I have hands but no arms, and I help you stay on time. Find the clock!", "HINT: Visit the wall decor or clocks section.", "Decoration"),
+            new Clue('clue_5', 4, "I love bananas and swinging from branches. Where is the Monkey?", "HINT: Check the soft toys in Children's IKEA.", "Children's IKEA"),
+            new Clue('clue_6', 5, "I'm big, blue, and carry everything back home. Find the IKEA bag!", "HINT: Look near the checkout or shopping accessories.", "Entrance/Exit")
         ];
     }
 

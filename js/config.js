@@ -10,11 +10,11 @@ const CONFIG = {
     // Game Settings
     ACCESS_CODE_LENGTH: 6,
     GAME_DURATION_MINUTES: 45,
-    TOTAL_CLUES_PER_SESSION: 3,
+    TOTAL_CLUES_PER_SESSION: 6,
 
     // Milestone Rewards (at these clue counts)
-    // 1 reward per clue: clue 1 = reward, clue 2 = reward, clue 3 = reward
-    MILESTONES: [1, 2, 3],
+    // One reward only at the end (clue 6)
+    MILESTONES: [6],
 
     // Timer Warning Threshold (minutes)
     TIMER_WARNING_MINUTES: 5,

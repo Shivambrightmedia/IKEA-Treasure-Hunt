@@ -232,10 +232,10 @@ app.post('/api/session/complete-clue', asyncHandler(async (req, res) => {
     const rewards = [...(session.rewards_earned || [])];
 
     // Check if this milestone earns a reward (from config-like logic on server)
-    const milestones = [1, 2, 3]; // Match CONFIG.MILESTONES
-    const rewardId = `reward_${completedCount}`;
+    const milestones = [6]; // Only at the end
+    const rewardId = `reward_final`;
 
-    if (milestones.includes(completedCount) && !rewards.some(r => r.id === rewardId)) {
+    if (milestones.includes(completedCount) && !rewards.some(r => r.type === 'final')) {
         // Generate secure barcode on server
         const timestamp = Date.now().toString(36).toUpperCase();
         const random = Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -243,11 +243,11 @@ app.post('/api/session/complete-clue', asyncHandler(async (req, res) => {
 
         rewards.push({
             id: rewardId,
-            milestone: completedCount,
+            milestone: 6,
             barcode: barcode,
             unlocked_at: new Date().toISOString(),
             redeemed: false,
-            type: completedCount === 3 ? 'final' : 'milestone'
+            type: 'final'
         });
     }
 

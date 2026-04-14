@@ -213,14 +213,15 @@ app.post('/api/session/complete-clue', asyncHandler(async (req, res) => {
     const rewardId = `reward_${completedClues.length}`;
 
     // Milestone reward logic
-    if ([1, 2, 3].includes(completedClues.length) && !rewards.some(r => r.id === rewardId)) {
+    // Only issue one reward at the end (clue 6)
+    if (completedClues.length === 6 && !rewards.some(r => r.type === 'final')) {
         const barcode = `IKEA-${Date.now().toString(36).toUpperCase()}`;
         rewards.push({
             id: rewardId,
-            milestone: completedClues.length,
+            milestone: 6,
             barcode,
             unlocked_at: new Date().toISOString(),
-            type: completedClues.length === 40 ? 'final' : 'milestone'
+            type: 'final'
         });
     }
 

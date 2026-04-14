@@ -526,11 +526,31 @@
 
         .reward-barcode {
             font-family: monospace;
-            font-size: 1em;
+            font-size: 1.1em;
             color: #333;
             background: #eee;
-            padding: 2px 6px;
+            padding: 8px;
             border-radius: 4px;
+            text-align: center;
+            display: block;
+            margin-top: 5px;
+        }
+
+        .reward-barcode.hidden {
+            display: none;
+        }
+
+        .redeem-btn {
+            background: var(--ikea-blue);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9em;
+            width: 100%;
+            margin-top: 5px;
         }
 
         .close-menu-btn {
@@ -651,8 +671,6 @@
                         number</p>
                 </div>
 
-
-
                 <button class="member-btn primary" id="btn-continue-2" style="border-radius: 30px;">CONTINUE</button>
 
                 <p style="margin-top: 20px; font-size: 0.9em;">
@@ -763,10 +781,13 @@
 
             <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-            <!-- 3 Markers for the Treasure Hunt -->
+            <!-- 6 Markers for the Treasure Hunt -->
             <a-entity mindar-image-target="targetIndex: 0" marker-handler="markerIndex: 0"></a-entity>
             <a-entity mindar-image-target="targetIndex: 1" marker-handler="markerIndex: 1"></a-entity>
             <a-entity mindar-image-target="targetIndex: 2" marker-handler="markerIndex: 2"></a-entity>
+            <a-entity mindar-image-target="targetIndex: 3" marker-handler="markerIndex: 3"></a-entity>
+            <a-entity mindar-image-target="targetIndex: 4" marker-handler="markerIndex: 4"></a-entity>
+            <a-entity mindar-image-target="targetIndex: 5" marker-handler="markerIndex: 5"></a-entity>
         </a-scene>
     </div>
 
