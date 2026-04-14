@@ -8,6 +8,7 @@ mkdir -p dist/js/managers dist/js/models dist/js/services dist/assets
 # Copy static files
 cp index.html dist/
 cp admin.html dist/
+cp ikealogo.png dist/
 [ -f targets.mind ] && cp targets.mind dist/
 [ -d assets ] && cp -r assets/* dist/assets/
 
