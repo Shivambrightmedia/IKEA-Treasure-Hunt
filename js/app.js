@@ -395,9 +395,12 @@ function redeemReward(index) {
             clearInterval(timer);
             barcode.classList.add('hidden');
             btn.style.display = 'block';
-            btn.textContent = 'REDEEMED';
-            btn.disabled = true;
-            btn.style.opacity = '0.5';
+            btn.textContent = 'REDEEM';
+            btn.disabled = false;
+            btn.style.opacity = '1';
+        } else {
+            // Optional: show countdown on button if we want, but user just said "reset"
+            // For now, simple reset.
         }
     }, 1000);
 }
