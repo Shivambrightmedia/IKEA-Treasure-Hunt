@@ -641,24 +641,29 @@
                     <span style="visibility:hidden; width: 50px;">Hide</span>
                 </div>
 
-                <h3 style="margin-bottom: 30px; color:var(--ikea-blue);">Enter your IKEA Membership / Phone Number</h3>
+                <h3 style="margin-bottom: 30px; color:var(--ikea-blue);">Tell us about yourself</h3>
+
+                <div class="input-group" style="width: 100%; margin-bottom: 20px;">
+                    <label style="color:var(--ikea-blue); font-weight:bold; margin-bottom:5px; display:block;">Full Name</label>
+                    <input type="text" id="userNameInput" placeholder="Enter your name"
+                        style="text-align: center; font-size: 1.1em; background: transparent; color: #333; border-color: #ccc; width: 100%; padding: 10px; border: 2px solid #ccc;">
+                </div>
 
                 <div class="input-group" style="width: 100%;">
+                    <label style="color:var(--ikea-blue); font-weight:bold; margin-bottom:5px; display:block;">Mobile Number</label>
                     <input type="text" id="membershipInput" placeholder="10-digit number" maxlength="10"
                         pattern="\d{10}" inputmode="numeric" autocomplete="off"
-                        style="text-align: center; font-size: 1.2em; letter-spacing: 2px; background: transparent; color: #333; border-color: #ccc;">
-                    <p class="code-error-msg" id="codeErrorMsg" style="text-align:center;">❌ Enter a valid 10-digit
-                        number</p>
+                        style="text-align: center; font-size: 1.1em; letter-spacing: 2px; background: transparent; color: #333; border-color: #ccc; width: 100%; padding: 10px; border: 2px solid #ccc;">
+                    <p class="code-error-msg" id="codeErrorMsg" style="text-align:center;">❌ Enter name and 10-digit number</p>
                 </div>
 
                 <p style="color:#666; font-size:0.85em; margin-bottom:30px;">
                     <span
                         style="display:inline-block; border-radius:50%; width:15px; height:15px; text-align:center; background:#eee; color:#666; line-height:15px; font-size:10px; margin-right:5px;">i</span>
-                    Find this in your IKEA app/email
+                    Find membership in IKEA app/email
                 </p>
 
-                <button class="member-btn primary" id="btn-continue-2" style="border-radius: 30px;">[ CONTINUE
-                    ]</button>
+                <button class="member-btn primary" id="btn-continue-2" style="border-radius: 30px;">[ CONTINUE ]</button>
 
                 <p style="margin-top: 20px; font-size: 0.9em;">
                     <span style="color:#666;">Not a member?</span> <a href="#" id="link-sign-up"

@@ -136,15 +136,18 @@ function initUI() {
     });
 
     document.getElementById('btn-continue-2')?.addEventListener('click', () => {
-        const input = document.getElementById('membershipInput');
+        const phoneInput = document.getElementById('membershipInput');
+        const nameInput = document.getElementById('userNameInput');
         const errorMsg = document.getElementById('codeErrorMsg');
-        if (input.value.length === 10) {
+
+        if (phoneInput.value.length === 10 && nameInput.value.trim().length > 0) {
             errorMsg.style.display = 'none';
             step2.classList.remove('active');
             step3.classList.add('active');
         } else {
             errorMsg.style.display = 'block';
             errorMsg.style.opacity = '1';
+            errorMsg.textContent = '❌ Enter your name and 10-digit mobile number';
         }
     });
 
@@ -188,15 +191,20 @@ function initUI() {
 let lockoutTimer = null;
 
 async function handleStartClick() {
-    const codeInput = document.getElementById('membershipInput');
+    const phoneInput = document.getElementById('membershipInput');
+    const nameInput = document.getElementById('userNameInput');
     const startBtn = document.getElementById('startBtn');
-    const membershipNumber = codeInput.value.trim();
+
+    const membershipNumber = phoneInput.value.trim();
+    const userName = nameInput.value.trim();
+    const combinedName = `${membershipNumber} : ${userName}`;
+
     const statusEl = document.getElementById('ar-status');
 
     if (lockoutTimer) return; // Prevent clicking while locked out
 
-    if (!membershipNumber || membershipNumber.length !== 10) {
-        showInlineError('❌ Please enter a 10-digit number');
+    if (!membershipNumber || membershipNumber.length !== 10 || !userName) {
+        showInlineError('❌ Please enter your name and 10-digit number');
         const step2 = document.getElementById('step-2');
         const step3 = document.getElementById('step-3');
         if (step3.classList.contains('active')) {
@@ -217,6 +225,7 @@ async function handleStartClick() {
         let isResume = false;
         let isCompleted = false;
         let isExpired = false;
+        let finalUserName = combinedName;
 
         try {
             // Check if this membership number already has an active session
@@ -228,9 +237,10 @@ async function handleStartClick() {
             isResume = result.isResume;
             isCompleted = result.isCompleted;
             isExpired = result.isExpired;
+            finalUserName = result.user_name || combinedName;
         } catch (err) {
             // 404 Not found means new player. Generate a new session code.
-            const newCodeData = await gameManager.accessCodeService.createCode(membershipNumber);
+            const newCodeData = await gameManager.accessCodeService.createCode(combinedName);
             code = newCodeData.code;
         }
 
@@ -240,14 +250,17 @@ async function handleStartClick() {
 
         statusEl.textContent = isResume ? 'Resuming Hunt...' : 'Starting Hunt!';
 
+        // Extract name portion for display (split by " : ")
+        const displayName = finalUserName.includes(' : ') ? finalUserName.split(' : ')[1] : finalUserName;
+
         if (isCompleted) {
-            await gameManager.showEndResults(code, 'completed', membershipNumber);
+            await gameManager.showEndResults(code, 'completed', displayName);
         } else if (isExpired) {
-            await gameManager.showEndResults(code, 'expired', membershipNumber);
+            await gameManager.showEndResults(code, 'expired', displayName);
         } else if (isResume) {
-            await gameManager.resumeGame(code, membershipNumber);
+            await gameManager.resumeGame(code, displayName);
         } else {
-            await gameManager.startNewGame(code, membershipNumber);
+            await gameManager.startNewGame(code, displayName);
         }
     } catch (error) {
         console.error('Mobile Connection Error:', error);

@@ -108,7 +108,7 @@ app.post('/api/check-member', asyncHandler(async (req, res) => {
     const { data: record, error } = await supabase
         .from('access_codes')
         .select('*')
-        .eq('user_name', membershipNumber)
+        .ilike('user_name', `${membershipNumber}%`)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -132,7 +132,7 @@ app.post('/api/check-member', asyncHandler(async (req, res) => {
  */
 app.post('/api/register-code', asyncHandler(async (req, res) => {
     const { code, user_name, status, created_at } = req.body;
-    
+
     const { data, error } = await supabase
         .from('access_codes')
         .insert([{
@@ -143,11 +143,11 @@ app.post('/api/register-code', asyncHandler(async (req, res) => {
         }])
         .select()
         .single();
-        
+
     if (error) {
         return res.status(500).json({ error: 'Failed to create code' });
     }
-    
+
     res.json(data);
 }));
 
