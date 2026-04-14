@@ -290,10 +290,21 @@ app.get('/api/admin/players', validateAdmin, asyncHandler(async (req, res) => {
             status = 'expired';
         }
 
+        const rawName = code.user_name || '-';
+        let name = rawName;
+        let phone = '-';
+
+        if (rawName.includes(' : ')) {
+            const parts = rawName.split(' : ');
+            phone = parts[0];
+            name = parts[1];
+        }
+
         return {
             code: code.code,
             status: status,
-            user_name: code.user_name || '-',
+            user_name: name,
+            phone: phone,
             cluesDone: session?.current_clue_index || 0,
             rewards: session?.rewards_earned?.length || 0,
             started: session?.started_at,

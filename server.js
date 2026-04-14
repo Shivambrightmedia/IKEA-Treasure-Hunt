@@ -361,19 +361,38 @@ app.get('/api/admin/players', validateAdmin, asyncHandler(async (req, res) => {
 
     const { data: sessions, error: sessErr } = await supabase
         .from('game_sessions')
-        .select('access_code, current_clue_index, rewards_earned, started_at, completed_at');
+        .select('access_code, current_clue_index, rewards_earned, started_at, completed_at, expires_at, wrong_scans');
 
     if (codeErr || sessErr) throw (codeErr || sessErr);
 
     const players = codes.map(code => {
         const session = sessions?.find(s => s.access_code === code.code);
+
+        let status = code.status;
+        if (status === 'active' && session && new Date(session.expires_at) < new Date()) {
+            status = 'expired';
+        }
+
+        const rawName = code.user_name || '-';
+        let name = rawName;
+        let phone = '-';
+
+        if (rawName.includes(' : ')) {
+            const parts = rawName.split(' : ');
+            phone = parts[0];
+            name = parts[1];
+        }
+
         return {
             code: code.code,
-            status: code.status,
+            status: status,
+            user_name: name,
+            phone: phone,
             cluesDone: session?.current_clue_index || 0,
             rewards: session?.rewards_earned?.length || 0,
             started: session?.started_at,
-            completedAt: session?.completed_at
+            completedAt: session?.completed_at,
+            wrongScans: session?.wrong_scans || 0
         };
     });
 

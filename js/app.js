@@ -338,9 +338,22 @@ function updateDashboard(dashboard) {
 
     // Update Side Menu content
     const menuName = document.getElementById('menu-player-name');
+    const menuPhone = document.getElementById('menu-player-phone');
     const menuRewards = document.getElementById('menu-reward-list');
 
-    if (menuName) menuName.textContent = dashboard.userName || 'Adventurer';
+    if (menuName) {
+        let displayName = dashboard.userName || 'Adventurer';
+        let displayPhone = '-';
+        
+        if (displayName.includes(' : ')) {
+            const parts = displayName.split(' : ');
+            displayPhone = parts[0];
+            displayName = parts[1];
+        }
+        
+        menuName.textContent = displayName;
+        if (menuPhone) menuPhone.textContent = displayPhone;
+    }
 
     if (menuRewards && dashboard.rewards) {
         if (dashboard.rewards.length === 0) {
