@@ -49,6 +49,8 @@ function handleStateChange(state, dashboard) {
     } else if (state === 'clue_completed') {
         showSuccessOverlay();
         updateDashboard(dashboard);
+    } else if (state === 'results_view') {
+        updateDashboard(dashboard);
     }
 }
 
