@@ -57,6 +57,13 @@ class DatabaseService {
             })];
         }
 
+        if (table === 'access_codes') {
+            return [await this.fetchApi('/register-code', {
+                method: 'POST',
+                body: JSON.stringify(data)
+            })];
+        }
+
         throw new Error(`Insert not implemented for table ${table}`);
     }
 
