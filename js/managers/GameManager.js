@@ -135,6 +135,14 @@ class GameManager {
                 return;
             }
 
+            // Check if already finished or expired before updating server
+            if (session.status === 'completed') {
+                return await this.showEndResults(accessCode, 'completed', name);
+            }
+            if (session.status === 'expired' || new Date(session.expires_at) < new Date()) {
+                return await this.showEndResults(accessCode, 'expired', name);
+            }
+
             // RECALCULATE EXPIRY: Resume from where they left off
             // New expiry = Current Time + Remaining Seconds from database
             const remainingSecs = session.remaining_seconds || (CONFIG.GAME_DURATION_MINUTES * 60);
@@ -166,13 +174,7 @@ class GameManager {
             console.log('Game resumed:', accessCode);
         } catch (error) {
             console.error('Resume game error:', error);
-            try {
-                console.log('Attempting to start new game as fallback...');
-                await this.startNewGame(accessCode, name);
-            } catch (fallbackError) {
-                console.error('Fallback also failed:', fallbackError);
-                if (this.onError) this.onError('Failed to start game. Please try again.');
-            }
+            if (this.onError) this.onError('Failed to resume session. Database might be paused or error happened.');
         }
     }
 
