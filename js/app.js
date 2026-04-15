@@ -443,18 +443,20 @@ function triggerConfetti() {
 
     (function frame() {
         confetti({
-            particleCount: 3,
+            particleCount: 5,
             angle: 60,
             spread: 55,
             origin: { x: 0 },
-            colors: ['#0051ba', '#ffda1a']
+            colors: ['#0051ba', '#ffda1a'],
+            scalar: 2
         });
         confetti({
-            particleCount: 3,
+            particleCount: 5,
             angle: 120,
             spread: 55,
             origin: { x: 1 },
-            colors: ['#0051ba', '#ffda1a']
+            colors: ['#0051ba', '#ffda1a'],
+            scalar: 2
         });
 
         if (Date.now() < end) {
