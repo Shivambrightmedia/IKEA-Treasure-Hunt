@@ -310,11 +310,13 @@ class GameManager {
             this.player.loadFromSession(updatedSession);
 
             // Load next clue or complete game
-            this.loadCurrentClue();
-
-            // Notify UI of state change
-            if (this.onStateChange) {
-                this.onStateChange('clue_completed', this.player.getDashboard(this.timerManager.getRemainingMs()));
+            if (nextIndex >= this.player.getAssignedClues().length) {
+                this.handleGameCompletion();
+            } else {
+                // Notify UI of state change (This will trigger the "Next Clue" button flow)
+                if (this.onStateChange) {
+                    this.onStateChange('clue_completed', this.player.getDashboard(this.timerManager.getRemainingMs()));
+                }
             }
 
             // If a new reward was added by the server, notify the UI
@@ -330,6 +332,16 @@ class GameManager {
         } catch (error) {
             console.error('Complete clue error:', error);
             if (this.onError) this.onError('Failed to save progress. Please try again.');
+        }
+    }
+
+    /**
+     * Advance to the next assigned clue
+     * To be called manually by UI (after "Next Clue" button click)
+     */
+    advanceToNextClue() {
+        if (this.player && this.timerManager) {
+            this.loadCurrentClue();
         }
     }
 
