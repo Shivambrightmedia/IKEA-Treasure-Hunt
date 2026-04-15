@@ -285,7 +285,7 @@ class GameManager {
             });
 
             if (this.onError) {
-                this.onError(`Wrong zone! (Target Index: ${markerIndex}) Check your clue.`);
+                this.onError(`Wrong zone! Try another or read the hint carefully.`);
             }
         }
     }

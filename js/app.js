@@ -334,7 +334,7 @@ function showGameScreen() {
     const menuBtn = document.getElementById('menu-btn');
     if (menuBtn) menuBtn.style.display = 'flex';
 
-    updateStatusIndicator('Hunting...', 'hunting');
+    updateStatusIndicator('', 'hunting');
 }
 
 function updateStatusIndicator(text, state = 'hunting') {
@@ -342,7 +342,8 @@ function updateStatusIndicator(text, state = 'hunting') {
     const statusDot = document.getElementById('status-dot');
     const statusEl = document.getElementById('ar-status');
 
-    if (statusText) statusText.textContent = text;
+    // Remove 'Hunting' text as requested, just show dot
+    if (statusText) statusText.textContent = (text === 'Hunting...' || !text) ? '' : text;
 
     if (statusEl) {
         statusEl.classList.remove('found', 'error');
@@ -351,8 +352,9 @@ function updateStatusIndicator(text, state = 'hunting') {
     }
 
     if (statusDot) {
-        statusDot.classList.remove('pulse');
+        statusDot.classList.remove('pulse', 'red');
         if (state === 'hunting') statusDot.classList.add('pulse');
+        if (state === 'error') statusDot.classList.add('red');
     }
 }
 
@@ -621,12 +623,11 @@ function showErrorMessage(message) {
         setTimeout(() => {
             statusEl.classList.remove('error');
             // Only reset if still showing error message
-            if (statusText && statusText.textContent.includes(message)) {
-                updateStatusIndicator('Hunting...', 'hunting');
+            if (statusText && statusText.textContent === message) {
+                updateStatusIndicator('', 'hunting');
             }
-        }, 3000);
+        }, 4000);
     }
-    // REMOVED: alert(message) - this was blocking the camera!
     console.warn('Game Error:', message);
 }
 
@@ -688,7 +689,7 @@ function initAR() {
         const arSystem = scene.systems['mindar-image-system'];
         scene.addEventListener('arReady', () => {
             // console.log('AR Ready');
-            updateStatusIndicator('Hunting...', 'hunting');
+            updateStatusIndicator('', 'hunting');
         });
         scene.addEventListener('arError', (event) => {
             console.error('AR Error', event);
