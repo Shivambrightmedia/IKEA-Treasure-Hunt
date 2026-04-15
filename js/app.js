@@ -464,17 +464,31 @@ function triggerConfetti() {
 }
 
 function showSuccessOverlay() {
+    const cluePanel = document.getElementById('clue-panel');
+    const wasVisible = cluePanel && cluePanel.classList.contains('visible');
+
+    if (wasVisible) cluePanel.classList.remove('visible');
+
     triggerConfetti();
     const successOverlay = document.getElementById('success-overlay');
     if (successOverlay) {
         successOverlay.classList.add('visible');
         setTimeout(() => {
             successOverlay.classList.remove('visible');
+            // Re-show panel for next clue if not finished
+            if (wasVisible && gameManager.state !== 'results_view') {
+                cluePanel.classList.add('visible');
+            }
         }, 4000);
     }
 }
 
 function showRewardUnlock(reward) {
+    const cluePanel = document.getElementById('clue-panel');
+    const wasVisible = cluePanel && cluePanel.classList.contains('visible');
+
+    if (wasVisible) cluePanel.classList.remove('visible');
+
     triggerConfetti();
     // Show reward notification
     const successOverlay = document.getElementById('success-overlay');
@@ -486,6 +500,9 @@ function showRewardUnlock(reward) {
         setTimeout(() => {
             successOverlay.classList.remove('visible');
             successOverlay.innerHTML = '✨ Clue Found! ✨';
+            if (wasVisible && gameManager.state !== 'results_view') {
+                cluePanel.classList.add('visible');
+            }
         }, 4000);
     }
 }
