@@ -263,6 +263,13 @@ app.post('/api/session/update', validateSession, asyncHandler(async (req, res) =
     res.json({ success: true });
 }));
 
+app.post('/api/access-codes/update', validateSession, asyncHandler(async (req, res) => {
+    const { access_code, updates } = req.body;
+    const { data, error } = await supabase.from('access_codes').update(updates).eq('code', access_code);
+    if (error) return res.status(500).json({ error: 'Update code failed' });
+    res.json({ success: true });
+}));
+
 app.post('/api/session/status', validateSession, asyncHandler(async (req, res) => {
     const { access_code, status } = req.body;
     const update = { status, [status === 'completed' ? 'completed_at' : 'expired_at']: new Date().toISOString() };
