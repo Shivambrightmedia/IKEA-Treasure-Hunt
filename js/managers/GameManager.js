@@ -26,6 +26,7 @@ class GameManager {
 
         // Internal sync
         this._syncInterval = null;
+        this.isWaitingForNextClue = false;
     }
 
     /**
@@ -270,7 +271,7 @@ class GameManager {
      * @param {number} markerIndex - Detected AR marker index
      */
     async handleMarkerFound(markerIndex) {
-        if (!this.currentClue || !this.player) return;
+        if (!this.currentClue || !this.player || this.isWaitingForNextClue) return;
 
         // Check if correct marker
         if (parseInt(markerIndex) === this.currentClue.targetIndex) {
@@ -313,6 +314,7 @@ class GameManager {
             if (nextIndex >= this.player.getAssignedClues().length) {
                 this.handleGameCompletion();
             } else {
+                this.isWaitingForNextClue = true;
                 // Notify UI of state change (This will trigger the "Next Clue" button flow)
                 if (this.onStateChange) {
                     this.onStateChange('clue_completed', this.player.getDashboard(this.timerManager.getRemainingMs()));
@@ -341,6 +343,7 @@ class GameManager {
      */
     advanceToNextClue() {
         if (this.player && this.timerManager) {
+            this.isWaitingForNextClue = false;
             this.loadCurrentClue();
         }
     }

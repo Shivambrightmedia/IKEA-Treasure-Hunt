@@ -225,12 +225,12 @@ async function handleStartClick() {
         return;
     }
 
-    statusEl.textContent = 'Preparing Game...';
+    updateStatusIndicator('Preparing Game...', 'hunting');
     startBtn.disabled = true;
     startBtn.textContent = 'Loading...';
 
     try {
-        statusEl.textContent = 'Checking membership...';
+        updateStatusIndicator('Checking membership...', 'hunting');
 
         let code;
         let isResume = false;
@@ -259,7 +259,7 @@ async function handleStartClick() {
         showGameScreen();
         initAR();
 
-        statusEl.textContent = isResume ? 'Resuming Hunt...' : 'Starting Hunt!';
+        updateStatusIndicator(isResume ? 'Resuming Hunt...' : 'Starting Hunt!', 'hunting');
 
         // Extract name portion for display (split by " : ")
         const displayName = finalUserName.includes(' : ') ? finalUserName.split(' : ')[1] : finalUserName;
@@ -334,7 +334,26 @@ function showGameScreen() {
     const menuBtn = document.getElementById('menu-btn');
     if (menuBtn) menuBtn.style.display = 'flex';
 
-    document.getElementById('ar-status').textContent = 'Hunting...';
+    updateStatusIndicator('Hunting...', 'hunting');
+}
+
+function updateStatusIndicator(text, state = 'hunting') {
+    const statusText = document.getElementById('status-text');
+    const statusDot = document.getElementById('status-dot');
+    const statusEl = document.getElementById('ar-status');
+
+    if (statusText) statusText.textContent = text;
+
+    if (statusEl) {
+        statusEl.classList.remove('found', 'error');
+        if (state === 'found') statusEl.classList.add('found');
+        if (state === 'error') statusEl.classList.add('error');
+    }
+
+    if (statusDot) {
+        statusDot.classList.remove('pulse');
+        if (state === 'hunting') statusDot.classList.add('pulse');
+    }
 }
 
 function updateDashboard(dashboard) {
@@ -579,7 +598,7 @@ function showEndScreen(reason, dashboard) {
         rewardScreen.classList.add('visible');
     }
 
-    document.getElementById('ar-status').textContent = reason === 'completed' ? '🏆 Completed!' : '⏰ Time\'s Up!';
+    updateStatusIndicator(reason === 'completed' ? '🏆 Completed!' : '⏰ Time\'s Up!', reason === 'completed' ? 'found' : 'error');
 }
 
 function updateRewardsList(rewards) {
@@ -594,16 +613,16 @@ function updateRewardsList(rewards) {
 }
 
 function showErrorMessage(message) {
+    updateStatusIndicator(message, 'error');
     const statusEl = document.getElementById('ar-status');
+    const statusText = document.getElementById('status-text');
     if (statusEl) {
-        const originalText = statusEl.textContent;
-        statusEl.textContent = '❌ ' + message;
         statusEl.classList.add('error');
         setTimeout(() => {
             statusEl.classList.remove('error');
             // Only reset if still showing error message
-            if (statusEl.textContent.includes(message)) {
-                statusEl.textContent = 'Hunting...';
+            if (statusText && statusText.textContent.includes(message)) {
+                updateStatusIndicator('Hunting...', 'hunting');
             }
         }, 3000);
     }
@@ -624,7 +643,7 @@ function showInlineError(message) {
         codeInput.classList.add('input-error');
     }
     if (statusEl) {
-        statusEl.textContent = 'Enter your code';
+        updateStatusIndicator('Enter your code', 'hunting');
     }
 
     // Hide error after 3 seconds, UNLESS we are in a lockout countdown
@@ -662,19 +681,18 @@ function toggleSideMenu() {
 // ==================== AR FUNCTIONS ====================
 
 function initAR() {
-    const statusEl = document.getElementById('ar-status');
-    if (statusEl) statusEl.textContent = 'Downloading AR Data (13MB)...';
+    updateStatusIndicator('Downloading AR Data (13MB)...', 'hunting');
 
     const scene = document.querySelector('a-scene');
     if (scene) {
         const arSystem = scene.systems['mindar-image-system'];
         scene.addEventListener('arReady', () => {
             // console.log('AR Ready');
-            if (statusEl) statusEl.textContent = 'Hunting...';
+            updateStatusIndicator('Hunting...', 'hunting');
         });
         scene.addEventListener('arError', (event) => {
             console.error('AR Error', event);
-            if (statusEl) statusEl.textContent = '❌ AR Error: Refresh page';
+            updateStatusIndicator('❌ AR Error: Refresh page', 'error');
         });
         if (arSystem) arSystem.start();
     }
