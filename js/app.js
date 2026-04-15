@@ -437,17 +437,45 @@ function updateTimerDisplay(formattedTime, remainingMs) {
     }
 }
 
+function triggerConfetti() {
+    const duration = 4 * 1000;
+    const end = Date.now() + duration;
+
+    (function frame() {
+        confetti({
+            particleCount: 3,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0 },
+            colors: ['#0051ba', '#ffda1a']
+        });
+        confetti({
+            particleCount: 3,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1 },
+            colors: ['#0051ba', '#ffda1a']
+        });
+
+        if (Date.now() < end) {
+            requestAnimationFrame(frame);
+        }
+    }());
+}
+
 function showSuccessOverlay() {
+    triggerConfetti();
     const successOverlay = document.getElementById('success-overlay');
     if (successOverlay) {
         successOverlay.classList.add('visible');
         setTimeout(() => {
             successOverlay.classList.remove('visible');
-        }, 2000);
+        }, 4000);
     }
 }
 
 function showRewardUnlock(reward) {
+    triggerConfetti();
     // Show reward notification
     const successOverlay = document.getElementById('success-overlay');
     if (successOverlay) {
@@ -458,7 +486,7 @@ function showRewardUnlock(reward) {
         setTimeout(() => {
             successOverlay.classList.remove('visible');
             successOverlay.innerHTML = '✨ Clue Found! ✨';
-        }, 3000);
+        }, 4000);
     }
 }
 
