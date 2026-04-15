@@ -68,7 +68,7 @@ class AccessCodeService {
 
         if (!record) {
             // Throw the generic or backend error (if passed through as a property)
-            throw new Error(record?.error || 'Code not found. Please check and try again.');
+            throw new Error('Code not found. Please check and try again.');
         }
 
         if (record.status === CONFIG.GAME_STATUS.COMPLETED) {

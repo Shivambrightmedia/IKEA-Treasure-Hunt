@@ -71,7 +71,8 @@ class DatabaseService {
         // Special Clue Completion case
         if (table === 'game_sessions' && updates.completed_clues) {
             // Extracts info from the update object
-            const lastCompletedId = updates.completed_clues[updates.completed_clues.length - 1];
+            const arr = updates.completed_clues;
+            const lastCompletedId = arr.length > 0 ? arr[arr.length - 1] : null;
             return await this.fetchApi('/session/complete-clue', {
                 method: 'POST',
                 body: JSON.stringify({
@@ -92,27 +93,23 @@ class DatabaseService {
             });
         }
 
-        // Special case for status updates
-        if (table === 'game_sessions' && updates.status) {
-            return await this.fetchApi('/session/status', {
-                method: 'POST',
-                body: JSON.stringify({
-                    access_code: conditions.access_code || conditions.code,
-                    status: updates.status
-                })
-            });
-        }
-
         if (table === 'access_codes') {
-            return await this.fetchApi('/session/status', {
+            return await this.fetchApi('/access-codes/update', {
                 method: 'POST',
                 body: JSON.stringify({
                     access_code: conditions.code,
-                    status: updates.status
+                    updates
                 })
             });
         }
 
         throw new Error(`Update not implemented for table ${table}`);
+    }
+
+    async reportWrongScan(accessCode) {
+        return await this.fetchApi('/session/wrong-scan', {
+            method: 'POST',
+            body: JSON.stringify({ access_code: accessCode })
+        });
     }
 }

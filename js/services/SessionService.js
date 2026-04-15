@@ -85,10 +85,7 @@ class SessionService {
      * @param {string} accessCode 
      */
     async reportWrongScan(accessCode) {
-        return await this.db.fetchApi('/session/wrong-scan', {
-            method: 'POST',
-            body: JSON.stringify({ access_code: accessCode })
-        });
+        return await this.db.reportWrongScan(accessCode);
     }
 
     /**

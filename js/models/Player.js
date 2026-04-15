@@ -83,7 +83,7 @@ class Player {
         let timeTaken = null;
         if (this.session?.status === CONFIG.GAME_STATUS.COMPLETED) {
             const totalSeconds = CONFIG.GAME_DURATION_MINUTES * 60;
-            const remainingSeconds = this.session.remaining_seconds || 0;
+            const remainingSeconds = Math.max(0, this.session.remaining_seconds || 0);
             const takenSeconds = totalSeconds - remainingSeconds;
             const takenMins = Math.floor(takenSeconds / 60);
             const takenSecs = takenSeconds % 60;
