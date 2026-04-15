@@ -193,8 +193,7 @@ function initUI() {
         nextClueBtn.addEventListener('click', () => {
             if (gameManager) {
                 gameManager.advanceToNextClue();
-                const successOverlay = document.getElementById('success-overlay');
-                if (successOverlay) successOverlay.classList.remove('visible');
+                // Button hiding handled in updateCluePanel
             }
         });
     }
@@ -422,10 +421,15 @@ function updateCluePanel(clue, currentNum, totalNum) {
     const clueHint = document.getElementById('clue-hint');
     const clueNumber = document.getElementById('clue-number');
     const cluePanel = document.getElementById('clue-panel');
+    const okBtn = document.getElementById('cp-ok');
+    const nextBtn = document.getElementById('next-clue-btn');
 
     if (clueText) clueText.textContent = clue.text;
     if (clueHint) clueHint.textContent = clue.hint;
     if (clueNumber) clueNumber.textContent = `Clue ${currentNum}/${totalNum}`;
+
+    if (okBtn) okBtn.style.display = 'block';
+    if (nextBtn) nextBtn.style.display = 'none';
 
     if (cluePanel) {
         cluePanel.classList.add('visible');
@@ -485,18 +489,36 @@ function showSuccessOverlay() {
 
     triggerConfetti();
     const successOverlay = document.getElementById('success-overlay');
-    const nextClueBtn = document.getElementById('next-clue-btn');
-
     if (successOverlay) {
         successOverlay.classList.add('visible');
+        setTimeout(() => {
+            successOverlay.classList.remove('visible');
 
-        // Show the "Next Clue" button after a short delay (once confetti is flowing)
-        if (nextClueBtn) {
-            nextClueBtn.style.display = 'none'; // Hide initially
-            setTimeout(() => {
-                nextClueBtn.style.display = 'block';
-            }, 1500);
-        }
+            // 3 seconds later, show the blank panel with Next Clue button
+            if (gameManager && gameManager.state !== 'results_view') {
+                prepareNextCluePanel();
+            }
+        }, 3000);
+    }
+}
+
+function prepareNextCluePanel() {
+    const cluePanel = document.getElementById('clue-panel');
+    const clueText = document.getElementById('clue-text');
+    const clueHint = document.getElementById('clue-hint');
+    const clueNumber = document.getElementById('clue-number');
+    const okBtn = document.getElementById('cp-ok');
+    const nextBtn = document.getElementById('next-clue-btn');
+
+    if (clueText) clueText.textContent = 'Well done! Ready for your next destination?';
+    if (clueHint) clueHint.textContent = '';
+    if (clueNumber) clueNumber.textContent = 'Destination Found';
+    if (okBtn) okBtn.style.display = 'none';
+    if (nextBtn) nextBtn.style.display = 'block';
+
+    if (cluePanel) {
+        cluePanel.classList.add('visible');
+        cluePanel.classList.remove('collapsed');
     }
 }
 
@@ -509,36 +531,21 @@ function showRewardUnlock(reward) {
     triggerConfetti();
     // Show reward notification
     const successOverlay = document.getElementById('success-overlay');
-    const nextClueBtn = document.getElementById('next-clue-btn');
-
     if (successOverlay) {
         successOverlay.innerHTML = reward.type === 'final'
-            ? '<div id="success-message">🏆 Final Reward Unlocked! 🏆</div>'
-            : `<div id="success-message">🎁 Milestone ${reward.milestone} Reward!</div>`;
-
-        // Re-add the button if it was overwritten by innerHTML
-        if (reward.type !== 'final') {
-            const btn = document.createElement('button');
-            btn.id = 'next-clue-btn-dynamic';
-            btn.className = 'ok-btn';
-            btn.style.marginTop = '15px';
-            btn.textContent = 'NEXT CLUE';
-            btn.onclick = () => {
-                gameManager.advanceToNextClue();
-                successOverlay.classList.remove('visible');
-            };
-            successOverlay.appendChild(btn);
-            btn.style.display = 'none';
-            setTimeout(() => btn.style.display = 'block', 1500);
-        }
+            ? '🏆 Final Reward Unlocked! 🏆'
+            : `🎁 Milestone ${reward.milestone} Reward!`;
 
         successOverlay.classList.add('visible');
 
-        if (reward.type === 'final') {
-            setTimeout(() => {
-                successOverlay.classList.remove('visible');
-            }, 4000);
-        }
+        setTimeout(() => {
+            successOverlay.classList.remove('visible');
+            successOverlay.innerHTML = '✨ Clue Found! ✨';
+
+            if (reward.type !== 'final' && gameManager.state !== 'results_view') {
+                prepareNextCluePanel();
+            }
+        }, 4000);
     }
 }
 
