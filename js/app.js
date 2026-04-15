@@ -121,7 +121,7 @@ function initUI() {
         step2.classList.add('active');
     });
 
-    const goToSignup = () => window.location.href = 'https://www.ikea.com/in/en/profile/signup/';
+    const goToSignup = () => window.open('https://www.ikea.com/in/en/profile/signup/', '_blank');
     document.getElementById('btn-sign-up')?.addEventListener('click', goToSignup);
     document.getElementById('link-sign-up')?.addEventListener('click', (e) => { e.preventDefault(); goToSignup(); });
 
