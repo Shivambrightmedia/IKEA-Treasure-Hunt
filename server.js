@@ -70,7 +70,13 @@ app.post('/api/validate-code', asyncHandler(async (req, res) => {
 
     const { data: record, error } = await supabase
         .from('access_codes')
-        .select('*')
+        .select(`
+            *,
+            game_sessions!access_code (
+                started_at,
+                completed_at
+            )
+        `)
         .eq('code', code)
         .single();
 
@@ -108,7 +114,13 @@ app.post('/api/check-member', asyncHandler(async (req, res) => {
 
     const { data: record, error } = await supabase
         .from('access_codes')
-        .select('*')
+        .select(`
+            *,
+            game_sessions!access_code (
+                started_at,
+                completed_at
+            )
+        `)
         .ilike('user_name', `${membershipNumber}%`)
         .order('created_at', { ascending: false })
         .limit(1)
@@ -118,13 +130,16 @@ app.post('/api/check-member', asyncHandler(async (req, res) => {
         return res.status(404).json({ error: 'Session not found' });
     }
 
+    const sessionData = record.game_sessions?.[0] || {};
     res.json({
         code: record.code,
         valid: true,
         user_name: record.user_name,
         isResume: record.status === 'active',
         isCompleted: record.status === 'completed',
-        isExpired: record.status === 'expired'
+        isExpired: record.status === 'expired',
+        started_at: sessionData.started_at,
+        completed_at: sessionData.completed_at
     });
 }));
 
