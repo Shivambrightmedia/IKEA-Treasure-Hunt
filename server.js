@@ -103,6 +103,11 @@ app.post('/api/validate-code', asyncHandler(async (req, res) => {
         response.message = 'Code verified! Starting game...';
     }
 
+    const sessionData = record.game_sessions?.[0] || {};
+    response.started_at = sessionData.started_at;
+    response.completed_at = sessionData.completed_at;
+
+    // console.log('[DEBUG] Validate Code Response:', response);
     res.json(response);
 }));
 
@@ -131,7 +136,7 @@ app.post('/api/check-member', asyncHandler(async (req, res) => {
     }
 
     const sessionData = record.game_sessions?.[0] || {};
-    res.json({
+    const response = {
         code: record.code,
         valid: true,
         user_name: record.user_name,
@@ -140,7 +145,9 @@ app.post('/api/check-member', asyncHandler(async (req, res) => {
         isExpired: record.status === 'expired',
         started_at: sessionData.started_at,
         completed_at: sessionData.completed_at
-    });
+    };
+    // console.log('[DEBUG] Check Member Response:', response);
+    res.json(response);
 }));
 
 /**
