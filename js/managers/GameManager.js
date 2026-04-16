@@ -377,16 +377,17 @@ class GameManager {
             await this.sessionService.markCompleted(this.player.accessCode);
             await this.accessCodeService.markCompleted(this.player.accessCode);
 
-            // Refresh session for final rewards display
+            // Refresh session and fetch latest data (including completed_at)
             const finalSession = await this.sessionService.getSession(this.player.accessCode);
             if (finalSession) {
                 this.player.loadFromSession(finalSession);
             }
 
-            // Show end screen after short delay
+            // Show end screen after short delay with refreshed data
             setTimeout(() => {
                 if (this.onGameEnd) {
-                    this.onGameEnd('completed', this.player.getDashboard(0));
+                    const dashboard = this.player.getDashboard(0);
+                    this.onGameEnd('completed', dashboard);
                 }
             }, 1000);
 
