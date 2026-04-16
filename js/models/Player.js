@@ -86,15 +86,15 @@ class Player {
 
         if (startStr) {
             const endStr = this.session?.completed_at || new Date().toISOString();
-            
+
             const start = new Date(startStr).getTime();
             const end = new Date(endStr).getTime();
-            
+
             const diffMs = Math.abs(end - start);
             const totalSeconds = Math.floor(diffMs / 1000);
             const takenMins = Math.floor(totalSeconds / 60);
             const takenSecs = totalSeconds % 60;
-            
+
             timeTaken = `${takenMins}m ${takenSecs}s`;
             // console.log(`[DEBUG] Time calc success: result=${timeTaken}`);
         } else {

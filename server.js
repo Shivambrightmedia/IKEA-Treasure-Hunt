@@ -182,13 +182,32 @@ app.get('/api/session/:code', asyncHandler(async (req, res) => {
 
     const { data, error } = await supabase
         .from('game_sessions')
-        .select('access_code, status, current_clue_index, completed_clues, assigned_clues, rewards_earned, expires_at, remaining_seconds, started_at, completed_at')
+        .select(`
+            access_code, 
+            status, 
+            current_clue_index, 
+            completed_clues, 
+            assigned_clues, 
+            rewards_earned, 
+            expires_at, 
+            remaining_seconds, 
+            started_at, 
+            completed_at,
+            access_codes!access_code (
+                activated_at,
+                created_at
+            )
+        `)
         .eq('access_code', code)
         .single();
 
     if (error || !data) {
         return res.status(404).json({ error: 'Session not found' });
     }
+
+    // Flatten for client
+    const accessCodeData = data.access_codes || {};
+    data.started_at = data.started_at || accessCodeData.activated_at || accessCodeData.created_at;
 
     res.json(data);
 }));
