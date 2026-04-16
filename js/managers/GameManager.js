@@ -90,8 +90,8 @@ class GameManager {
             // Activate the access code
             await this.accessCodeService.activate(accessCode);
 
-            // Start timer
-            this.startTimer(session.expires_at);
+            // Live timer no longer needed
+            // this.startTimer(session.expires_at);
 
             // Start auto-save heartbeat
             this._startAutoSync();
@@ -157,9 +157,9 @@ class GameManager {
 
             this.player.loadFromSession(session);
 
-            // Start timer with expiry
-            this.startTimer(session.expires_at);
-            const remainingMs = this.timerManager.getRemainingMs();
+            // Live timer no longer needed
+            // this.startTimer(session.expires_at);
+            const remainingMs = 0; // Fixed at 0, using timestamps for duration
 
             // Start auto-save heartbeat (update database every 60s)
             this._startAutoSync();
@@ -317,7 +317,7 @@ class GameManager {
                 this.isWaitingForNextClue = true;
                 // Notify UI of state change (This will trigger the "Next Clue" button flow)
                 if (this.onStateChange) {
-                    this.onStateChange('clue_completed', this.player.getDashboard(this.timerManager.getRemainingMs()));
+                    this.onStateChange('clue_completed', this.player.getDashboard(0));
                 }
             }
 
@@ -368,10 +368,8 @@ class GameManager {
             if (this.timerManager) this.timerManager.stop();
             if (this._syncInterval) clearInterval(this._syncInterval);
 
-            // Sync final time for accurate "time taken" display
-            const finalRemainingSeconds = Math.floor((this.timerManager?.getRemainingMs() || 0) / 1000);
+            // Time taken will be calculated from started_at vs now
             await this.sessionService.updateProgress(this.player.accessCode, {
-                remaining_seconds: finalRemainingSeconds,
                 last_activity: new Date().toISOString()
             });
 
@@ -429,29 +427,9 @@ class GameManager {
         }
     }
 
-    /**
-     * Periodically sync remaining time to database (Auto-save)
-     * This allows the game to 'pause' when closed and resume correctly
-     */
     _startAutoSync() {
-        if (this._syncInterval) clearInterval(this._syncInterval);
-
-        this._syncInterval = setInterval(async () => {
-            if (!this.player || !this.timerManager || !this.timerManager.isRunning()) {
-                return;
-            }
-
-            const remainingSeconds = Math.floor(this.timerManager.getRemainingMs() / 1000);
-
-            try {
-                await this.sessionService.updateProgress(this.player.accessCode, {
-                    remaining_seconds: remainingSeconds,
-                    last_activity: new Date().toISOString()
-                });
-            } catch (err) {
-                console.warn('Silent sync failed:', err.message);
-            }
-        }, 60000); // Every 60 seconds
+        // Heartbeat sync disabled to save resources
+        return;
     }
 
     /**

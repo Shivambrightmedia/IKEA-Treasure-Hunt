@@ -26,7 +26,6 @@ function initApp() {
     gameManager.setCallbacks({
         onStateChange: handleStateChange,
         onClueChange: handleClueChange,
-        onTimerUpdate: handleTimerUpdate,
         onGameEnd: handleGameEnd,
         onRewardUnlock: handleRewardUnlock,
         onError: handleError
@@ -75,9 +74,6 @@ function updateARSource(fileName) {
     // console.log("AR Scanner active with universal target file.");
 }
 
-function handleTimerUpdate(formattedTime, remainingMs) {
-    updateTimerDisplay(formattedTime, remainingMs);
-}
 
 function handleGameEnd(reason, dashboard) {
     // console.log('Game ended:', reason);
@@ -326,9 +322,7 @@ function showGameScreen() {
     const regOverlay = document.getElementById('registration-overlay');
     if (regOverlay) regOverlay.classList.add('hidden');
 
-    // Show timer display
-    const timerDisplay = document.getElementById('timer-display');
-    if (timerDisplay) timerDisplay.style.display = 'block';
+    // Live timer display no longer needed
 
     // Show hamburger menu
     const menuBtn = document.getElementById('menu-btn');
@@ -359,8 +353,6 @@ function updateStatusIndicator(text, state = 'hunting') {
 }
 
 function updateDashboard(dashboard) {
-    // Update timer display
-    updateTimerDisplay(dashboard.timeRemaining, dashboard.timeRemainingMs);
 
     // Update progress if element exists
     const progressEl = document.getElementById('progress-display');
@@ -460,19 +452,6 @@ function updateCluePanel(clue, currentNum, totalNum) {
     updateToggleIcon();
 }
 
-function updateTimerDisplay(formattedTime, remainingMs) {
-    const timerEl = document.getElementById('timer-display');
-    if (timerEl) {
-        timerEl.textContent = formattedTime;
-
-        // Add warning class if low time
-        if (remainingMs < CONFIG.TIMER_WARNING_MINUTES * 60 * 1000) {
-            timerEl.classList.add('warning');
-        } else {
-            timerEl.classList.remove('warning');
-        }
-    }
-}
 
 function triggerConfetti() {
     const duration = 4 * 1000;

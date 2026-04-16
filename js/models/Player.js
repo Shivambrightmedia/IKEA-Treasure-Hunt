@@ -79,14 +79,15 @@ class Player {
         const minutes = Math.floor(remainingTimeMs / 60000);
         const seconds = Math.floor((remainingTimeMs % 60000) / 1000);
 
-        // Calculate time taken if completed
+        // Calculate time taken from timestamps
         let timeTaken = null;
-        if (this.session?.status === CONFIG.GAME_STATUS.COMPLETED) {
-            const totalSeconds = CONFIG.GAME_DURATION_MINUTES * 60;
-            const remainingSeconds = Math.max(0, this.session.remaining_seconds || 0);
-            const takenSeconds = totalSeconds - remainingSeconds;
-            const takenMins = Math.floor(takenSeconds / 60);
-            const takenSecs = takenSeconds % 60;
+        if (this.session?.started_at && (this.session?.completed_at || this.session?.status === CONFIG.GAME_STATUS.COMPLETED)) {
+            const start = new Date(this.session.started_at);
+            const end = this.session.completed_at ? new Date(this.session.completed_at) : new Date();
+            const diffMs = Math.abs(end - start);
+            const totalSeconds = Math.floor(diffMs / 1000);
+            const takenMins = Math.floor(totalSeconds / 60);
+            const takenSecs = totalSeconds % 60;
             timeTaken = `${takenMins}m ${takenSecs}s`;
         }
 

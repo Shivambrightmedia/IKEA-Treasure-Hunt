@@ -48,9 +48,10 @@ const validateSession = asyncHandler(async (req, res, next) => {
         return res.status(403).json({ error: 'Invalid or missing session' });
     }
 
-    if (data.status === 'expired' || new Date(data.expires_at) < new Date()) {
-        return res.status(403).json({ error: 'Session has expired' });
-    }
+    // Expiry check disabled as per user request
+    // if (data.status === 'expired' || new Date(data.expires_at) < new Date()) {
+    //     return res.status(403).json({ error: 'Session has expired' });
+    // }
 
     next();
 });
@@ -387,7 +388,7 @@ app.get('/api/admin/players', validateAdmin, asyncHandler(async (req, res) => {
         const session = sessions?.find(s => s.access_code === code.code);
 
         let status = code.status;
-        if (status === 'active' && session && new Date(session.expires_at) < new Date()) {
+        if (status === 'active' && session && false) { // Expiry disabled
             status = 'expired';
         }
 
