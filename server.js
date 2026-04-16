@@ -160,7 +160,7 @@ app.get('/api/session/:code', asyncHandler(async (req, res) => {
 
     const { data, error } = await supabase
         .from('game_sessions')
-        .select('access_code, status, current_clue_index, completed_clues, assigned_clues, rewards_earned, expires_at, remaining_seconds')
+        .select('access_code, status, current_clue_index, completed_clues, assigned_clues, rewards_earned, expires_at, remaining_seconds, started_at, completed_at')
         .eq('access_code', code)
         .single();
 
@@ -197,7 +197,7 @@ app.post('/api/session', asyncHandler(async (req, res) => {
             status: 'active',
             started_at: new Date().toISOString()
         })
-        .select()
+        .select('access_code, status, current_clue_index, completed_clues, assigned_clues, rewards_earned, expires_at, remaining_seconds, started_at, completed_at')
         .single();
 
     if (error) {
