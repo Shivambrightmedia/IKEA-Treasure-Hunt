@@ -9,6 +9,7 @@ class Player {
         this.name = name;
         this.session = null;
         this.isNewPlayer = true;
+        this.gameStartTime = null;
     }
 
     /**
@@ -18,6 +19,12 @@ class Player {
     loadFromSession(session) {
         this.session = session;
         this.isNewPlayer = false;
+
+        // Persistent start time locking
+        if (!this.gameStartTime) {
+            this.gameStartTime = session.started_at || session.activated_at || session.created_at;
+            // console.log('[DEBUG] Start time locked for session:', this.gameStartTime);
+        }
     }
 
     /**
@@ -81,8 +88,7 @@ class Player {
 
         // Calculate time taken from timestamps
         let timeTaken = null;
-        const startStr = this.session?.started_at || this.session?.activated_at || this.session?.created_at;
-        const isFinished = this.session?.completed_at || this.session?.status === CONFIG.GAME_STATUS.COMPLETED;
+        const startStr = this.gameStartTime;
 
         if (startStr) {
             const endStr = this.session?.completed_at || new Date().toISOString();
@@ -98,7 +104,7 @@ class Player {
             timeTaken = `${takenMins}m ${takenSecs}s`;
             // console.log(`[DEBUG] Time calc success: result=${timeTaken}`);
         } else {
-            console.warn('[DEBUG] Time calc skipped: no start timestamp found in session', this.session);
+            console.warn('[DEBUG] Time calc skipped: no start timestamp found. Session:', this.session);
         }
 
         return {
