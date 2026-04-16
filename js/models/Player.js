@@ -81,10 +81,11 @@ class Player {
 
         // Calculate time taken from timestamps
         let timeTaken = null;
-        console.log('[DEBUG] getDashboard session:', this.session);
-        if (this.session?.started_at && (this.session?.completed_at || this.session?.status === CONFIG.GAME_STATUS.COMPLETED)) {
-            const startStr = this.session.started_at;
-            const endStr = this.session.completed_at || new Date().toISOString();
+        const startStr = this.session?.started_at || this.session?.activated_at || this.session?.created_at;
+        const isFinished = this.session?.completed_at || this.session?.status === CONFIG.GAME_STATUS.COMPLETED;
+
+        if (startStr) {
+            const endStr = this.session?.completed_at || new Date().toISOString();
             
             const start = new Date(startStr).getTime();
             const end = new Date(endStr).getTime();
@@ -95,13 +96,9 @@ class Player {
             const takenSecs = totalSeconds % 60;
             
             timeTaken = `${takenMins}m ${takenSecs}s`;
-            console.log(`[DEBUG] Time calc success: start=${startStr}, end=${endStr}, result=${timeTaken}`);
+            // console.log(`[DEBUG] Time calc success: result=${timeTaken}`);
         } else {
-            console.warn('[DEBUG] Time calc skipped:', {
-                started: this.session?.started_at,
-                completed: this.session?.completed_at,
-                status: this.session?.status
-            });
+            console.warn('[DEBUG] Time calc skipped: no start timestamp found in session', this.session);
         }
 
         return {
