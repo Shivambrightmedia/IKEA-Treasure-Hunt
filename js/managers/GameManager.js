@@ -101,7 +101,7 @@ class GameManager {
 
             // Notify UI
             if (this.onStateChange) {
-                this.onStateChange('playing', this.player.getDashboard(this.timerManager.getRemainingMs()));
+                this.onStateChange('playing', this.player.getDashboard(0));
             }
 
             // console.log('New game started:', accessCode);
@@ -169,7 +169,7 @@ class GameManager {
 
             // Notify UI
             if (this.onStateChange) {
-                this.onStateChange('playing', this.player.getDashboard(remainingMs));
+                this.onStateChange('playing', this.player.getDashboard(0));
             }
 
             // console.log('Game resumed:', accessCode);
@@ -437,7 +437,7 @@ class GameManager {
      * @returns {Object|null} Dashboard data or null
      */
     getDashboard() {
-        if (!this.player || !this.timerManager) return null;
-        return this.player.getDashboard(this.timerManager.getRemainingMs());
+        if (!this.player) return null;
+        return this.player.getDashboard(0);
     }
 }
