@@ -368,9 +368,18 @@ class GameManager {
             if (this.timerManager) this.timerManager.stop();
             if (this._syncInterval) clearInterval(this._syncInterval);
 
-            // Time taken will be calculated from started_at vs now
+            // Set final completion time locally first to ensure it's available for the dashboard
+            const completionTime = new Date().toISOString();
+            if (this.player.session) {
+                this.player.session.completed_at = completionTime;
+                this.player.session.status = 'completed';
+            }
+
+            // Sync with backend
             await this.sessionService.updateProgress(this.player.accessCode, {
-                last_activity: new Date().toISOString()
+                last_activity: completionTime,
+                completed_at: completionTime,
+                status: 'completed'
             });
 
             // Mark session and code as completed
