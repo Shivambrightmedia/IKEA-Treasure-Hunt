@@ -342,7 +342,7 @@ class GameManager {
      * To be called manually by UI (after "Next Clue" button click)
      */
     advanceToNextClue() {
-        if (this.player && this.timerManager) {
+        if (this.player) {
             this.isWaitingForNextClue = false;
             this.loadCurrentClue();
         }
