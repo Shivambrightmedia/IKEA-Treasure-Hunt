@@ -82,13 +82,16 @@ class Player {
         // Calculate time taken from timestamps
         let timeTaken = null;
         if (this.session?.started_at && (this.session?.completed_at || this.session?.status === CONFIG.GAME_STATUS.COMPLETED)) {
-            const start = new Date(this.session.started_at);
-            const end = this.session.completed_at ? new Date(this.session.completed_at) : new Date();
+            const start = new Date(this.session.started_at).getTime();
+            const end = (this.session.completed_at ? new Date(this.session.completed_at) : new Date()).getTime();
+            
             const diffMs = Math.abs(end - start);
             const totalSeconds = Math.floor(diffMs / 1000);
             const takenMins = Math.floor(totalSeconds / 60);
             const takenSecs = totalSeconds % 60;
+            
             timeTaken = `${takenMins}m ${takenSecs}s`;
+            // console.log(`Time calc: start=${this.session.started_at}, end=${this.session.completed_at || 'NOW'}, diff=${timeTaken}`);
         }
 
         return {
